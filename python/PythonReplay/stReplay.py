@@ -1,7 +1,10 @@
 import sys, os
+import msvcrt
 from time import sleep
 sys.path .append('../')
 from py4j.java_gateway import JavaGateway, GatewayParameters, CallbackServerParameters, get_field
+
+KEY_LIST = {'a':"a", 'b':"b",'c':"c"}
 
 gateway = JavaGateway(gateway_parameters=GatewayParameters(port=4242), callback_server_parameters=CallbackServerParameters());
 manager = gateway.entry_point
@@ -11,10 +14,21 @@ replay = manager.loadReplay("HPMode_KeyBoard_KeyBoard_2021.08.03-17.42.19") # Lo
 
 print("Replay: Init")
 replay.init()
+e_list =[]
 
 # Main process
 for i in range(12000): # Simulate 100 frames
-    print("Replay: Run frame", i)    
+    # print("Replay: Run frame", i)    
+    if msvcrt.kbhit():
+        key = msvcrt.getch().decode()
+        if key in KEY_LIST:
+            framedata = replay.getFrameData()
+            e_list.append(((framedata.getRound(),framedata.getFramesNumber()),KEY_LIST[key]))
+            print(KEY_LIST[key])
+        elif key == 'q':
+            break
+
+
     sys.stdout.flush()
 
     replay.updateState()
@@ -24,6 +38,7 @@ for i in range(12000): # Simulate 100 frames
     
 
 print("Replay: Close")
+print(e_list)
 replay.close()
 
 sys.stdout.flush()
