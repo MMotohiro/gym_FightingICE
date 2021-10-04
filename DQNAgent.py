@@ -43,11 +43,20 @@ class NN(object):
         # HACK: 途中のデータ数を決め打ちしないようにする
 
         self.model = Sequential()
+
+        #noob
         self.model.add(Dense(action_size, activation='relu', input_dim=35))
         self.model.add(Dense(action_size, activation='relu'))
         self.model.add(Dense(action_size, activation='relu'))
         self.model.add(Dense(action_size, activation='linear'))
         self.model.compile(loss=huberloss, optimizer='adam')
+
+        #CYR_AI model
+        # self.model.add(Dense(200, activation='relu', input_dim=144))
+        # self.model.add(Dense(200, activation='relu'))
+        # self.model.add(Dense(40, activation='linear'))
+        # self.model.compile(loss=huberloss, optimizer='adam')
+
 
     # TODO: 入力データの型を決める
     def fit(self, data: any, label: any) -> None:

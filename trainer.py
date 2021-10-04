@@ -1,10 +1,13 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import os
 
 from memory import Memory
 
-MODEL_NAME = "param.0927"
+MODEL_NAME = "param.CYR01"
+MODEL_PATH = "./model/" + MODEL_NAME
+MODEL_TXT = MODEL_NAME.split('.')[0] + ".txt"
 
 class Trainer(object):
     """ 選手の学習や試合の状態を管理する """
@@ -34,8 +37,16 @@ class Trainer(object):
         :param gamma: 価値関数の値をどれだけ重要視するかどうか
         """
         reward_list = []
-
-        for i in range(episode):
+        startEpisode = 0
+        try:
+            with open(MODEL_TXT ,'r') as f:
+                startEpisode = int(f.read())    
+        except:
+            f = open(MODEL_TXT , 'w')
+            f.write('0')
+            f.close()
+    
+        for i in range(startEpisode ,episode):
 
             frame_data = self.env.reset()
             # NOTE: 学習出来るように変形しておく
@@ -61,7 +72,7 @@ class Trainer(object):
                 frame_data = next_frame_data
 
             batch = self.memory.sample(batch_size)
-            print("step a")
+
             # NOTE: 学習させるときにenvを変形させる. その時のenvのlenを入れる
             # FIXME: envのlenの管理方法を考える
             inputs = np.zeros((batch_size, state_len))
@@ -89,15 +100,19 @@ class Trainer(object):
             last_frame = self.memory.get_last_data()[0]
             reward_list.append(last_frame[0][0] - last_frame[0][11])
 
+            # 現在のepisode数を記録
+            with open(MODEL_TXT ,'w') as f:
+                f.write(str(startEpisode)) 
+
             print("end round" + str(i+1) + "/" + str(episode))
             print("total step:"  + str(total_step))
             # 5試合ごとにモデルを保存
             if(i % 5 == 0 and i > 0):
                 print("save model....")
-                self.agent.model.save_model(MODEL_NAME)
+                self.agent.model.save_model(MODEL_PATH)
                 print("done saving model!")
 
-        self.agent.model.save_model(MODEL_NAME)
+        self.agent.model.save_model(MODEL_PATH)
         print("************\nmode save end\n************")
         self.create_image(reward_list, 'reward.png')
         print("************\ncreate image end\n************")

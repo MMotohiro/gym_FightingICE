@@ -53,6 +53,9 @@ class Observer(object):
 
         :param frame_data: フレームデータ
         :return: 整形したデータ
+
+        CYR_AIを参考にデータの正規化,one hot化を行う。 
+        -> こっちでは正規化いらない、flattenをいじる
         """
 
         data = {"self": {}, "opp": {}, "frame_run": {}}
@@ -110,6 +113,8 @@ class Observer(object):
 
         :param data: 変形したいデータ
         :return: 変形後のデータ
+        
+        こちらも同じくCYR_AI形式に対応
         """
 
         # HACK: 入力データが多いので絞り込む
