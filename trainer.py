@@ -7,7 +7,7 @@ from memory import Memory
 
 MODEL_NAME = "param.CYR01"
 MODEL_PATH = "./model/" + MODEL_NAME
-MODEL_TXT = MODEL_NAME.split('.')[0] + ".txt"
+MODEL_TXT = "./model/" + MODEL_NAME.split('.')[1] + ".txt"
 
 class Trainer(object):
     """ 選手の学習や試合の状態を管理する """
@@ -59,13 +59,12 @@ class Trainer(object):
             while not done:
                 total_step += 1
                 # TODO: 毎回get_observation_spaceを実行しないようにしておく
-                action = self.agent.get_action(frame_data, observation_s)
+                action = self.agent.get_action(frame_data, observation_s, i ,episode)
                 # アクションの実行、記録
                 next_frame_data, reward, done, info = self.env.step(action)
                 
                 # NOTE: 学習出来るように変形しておく
                 next_frame_data = self.env.flatten(next_frame_data)
-                print(next_frame_data)
 
                 # NOTE: experience replayを実施するため試合を回しながら学習させない
                 self.memory.add((frame_data, action, reward, next_frame_data))
@@ -102,7 +101,7 @@ class Trainer(object):
 
             # 現在のepisode数を記録
             with open(MODEL_TXT ,'w') as f:
-                f.write(str(startEpisode)) 
+                f.write(str(i)) 
 
             print("end round" + str(i+1) + "/" + str(episode))
             print("total step:"  + str(total_step))

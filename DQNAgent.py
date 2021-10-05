@@ -45,10 +45,9 @@ class NN(object):
         self.model = Sequential()
 
         #noob
-        self.model.add(Dense(action_size, activation='relu', input_dim=35))
-        self.model.add(Dense(action_size, activation='relu'))
-        self.model.add(Dense(action_size, activation='relu'))
-        self.model.add(Dense(action_size, activation='linear'))
+        self.model.add(Dense(200, activation='relu', input_dim=143))
+        self.model.add(Dense(200, activation='relu'))
+        self.model.add(Dense(action_size, activation='linear', input_dim=200))
         self.model.compile(loss=huberloss, optimizer='adam')
 
         #CYR_AI model
@@ -115,7 +114,7 @@ class DQNAgent(object):
         self.action_size = action_size
         self.greedy_value = greedy_value
 
-    def get_action(self, data: List[Union[int, float]], observation_space: spaces) -> Action:
+    def get_action(self, data: List[Union[int, float]], observation_space: spaces, episode: int, maxEpisode: int) -> Action:
         """
         現在の状態から最適な行動を求める
         :param data: 現在の状態
@@ -124,10 +123,12 @@ class DQNAgent(object):
         """
 
         key = random.random()
-        if key < self.greedy_value:
+        greedy_value = max((1.0 - (episode * 1.3 / maxEpisode))  * self.greedy_value , 0.05)
+        print(greedy_value)
+        if key < greedy_value:
             random_action_value = random.randint(0, self.action_size-2)
             return Action(random_action_value+1)
-
+        
         action_value = self.model.predict(data)[0]
 
         # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)

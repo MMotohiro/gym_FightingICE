@@ -14,7 +14,18 @@ replay.init()
 
 # Main process
 for i in range(12000): # Simulate 100 frames
-    print("Replay: Run frame", i)    
+    print("Replay: Run frame", i)
+
+    if i % 10 == 0 and replay.getState().name() == "UPDATE":
+        framedata = replay.getFrameData()
+
+        print("Replay: Infos")
+        print("Replay:     Round:", framedata.getRound())
+        print("Replay:     Frame:", framedata.getFramesNumber())
+        print("Replay:     P1 HP:", framedata.getCharacter(True).getHp())
+        print("Replay:     P2 HP:", framedata.getCharacter(False).getHp())
+
+    
     sys.stdout.flush()
 
     replay.updateState()

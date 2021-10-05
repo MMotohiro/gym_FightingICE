@@ -23,7 +23,10 @@ def main():
     p2 = "MctsAi"
     env = Observer(gymEnv, p2)
     agent = DQNAgent(learning_rate, action_size, greedy_value)
-    # agent.model.load_model(MODEL_PATH)
+    try:
+        agent.model.load_model(MODEL_PATH)
+    except:
+        pass
     print("************\nload  model\n************")
     # agent = RoleBaseAgent()
     trainer = Trainer(env, agent)

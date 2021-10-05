@@ -32,7 +32,8 @@ class Observer(object):
         :return: Actionを実施した直後の次の状態, 報酬, ゲームが終了しているかどうか, その他の情報
         """
         n_state, reward, done, info = self._env.step(action)
-        return self.transform(n_state), reward, done, info
+        # return self.transform(n_state), reward, done, info
+        return n_state, reward, done, info
 
     def reset(self) -> Dict:
         """
@@ -41,7 +42,7 @@ class Observer(object):
         :return: 初期化直後の状態
         """
 
-        return self.transform(self._env.reset(p2=self.p2))
+        return self._env.reset(p2=self.p2)
 
     def transform(self, frame_data: np.ndarray) -> Dict:
         """
@@ -120,45 +121,49 @@ class Observer(object):
         # HACK: 入力データが多いので絞り込む
         # HACK: magic numberを使わないようにする
 
-        result = np.zeros((1, 35))
-        result[0][0] = data["self"]["HP"]
-        result[0][1] = data["self"]["Energy"]
-        result[0][2] = data["self"]["X"]
-        result[0][3] = data["self"]["Y"]
-        result[0][4] = data["self"]["SpeedX"]
-        result[0][5] = data["self"]["AbsSpeedX"]
-        result[0][6] = data["self"]["SpeedY"]
-        result[0][7] = data["self"]["AbsSpeedY"]
-        result[0][8] = data["self"]["CurrentAction"]
-        result[0][9] = data["self"]["State"]
-        result[0][10] = data["self"]["RemainingFrame"]
+        # result = np.zeros((1, 35))
+        # result[0][0] = data["self"]["HP"]
+        # result[0][1] = data["self"]["Energy"]
+        # result[0][2] = data["self"]["X"]
+        # result[0][3] = data["self"]["Y"]
+        # result[0][4] = data["self"]["SpeedX"]
+        # result[0][5] = data["self"]["AbsSpeedX"]
+        # result[0][6] = data["self"]["SpeedY"]
+        # result[0][7] = data["self"]["AbsSpeedY"]
+        # result[0][8] = data["self"]["CurrentAction"]
+        # result[0][9] = data["self"]["State"]
+        # result[0][10] = data["self"]["RemainingFrame"]
 
-        result[0][11] = data["opp"]["HP"]
-        result[0][11] = data["opp"]["Energy"]
-        result[0][12] = data["opp"]["X"]
-        result[0][13] = data["opp"]["Y"]
-        result[0][14] = data["opp"]["SpeedX"]
-        result[0][15] = data["opp"]["AbsSpeedX"]
-        result[0][16] = data["opp"]["SpeedY"]
-        result[0][17] = data["opp"]["AbsSpeedY"]
-        result[0][18] = data["opp"]["CurrentAction"]
-        result[0][19] = data["opp"]["State"]
-        result[0][20] = data["opp"]["RemainingFrame"]
+        # result[0][11] = data["opp"]["HP"]
+        # result[0][11] = data["opp"]["Energy"]
+        # result[0][12] = data["opp"]["X"]
+        # result[0][13] = data["opp"]["Y"]
+        # result[0][14] = data["opp"]["SpeedX"]
+        # result[0][15] = data["opp"]["AbsSpeedX"]
+        # result[0][16] = data["opp"]["SpeedY"]
+        # result[0][17] = data["opp"]["AbsSpeedY"]
+        # result[0][18] = data["opp"]["CurrentAction"]
+        # result[0][19] = data["opp"]["State"]
+        # result[0][20] = data["opp"]["RemainingFrame"]
 
-        result[0][21] = data["frame_run"]
+        # result[0][21] = data["frame_run"]
 
-        result[0][22] = data["self"]["HitDamage"]
-        result[0][23] = data["self"]["HitAreaNowX"]
-        result[0][24] = data["self"]["HitAreaNowY"]
-        result[0][25] = data["self"]["NextHitDamage"]
-        result[0][26] = data["self"]["NextHitAreaNowX"]
-        result[0][27] = data["self"]["NextHitAreaNowY"]
+        # result[0][22] = data["self"]["HitDamage"]
+        # result[0][23] = data["self"]["HitAreaNowX"]
+        # result[0][24] = data["self"]["HitAreaNowY"]
+        # result[0][25] = data["self"]["NextHitDamage"]
+        # result[0][26] = data["self"]["NextHitAreaNowX"]
+        # result[0][27] = data["self"]["NextHitAreaNowY"]
 
-        result[0][28] = data["opp"]["HitDamage"]
-        result[0][29] = data["opp"]["HitAreaNowX"]
-        result[0][30] = data["opp"]["HitAreaNowY"]
-        result[0][31] = data["opp"]["NextHitDamage"]
-        result[0][32] = data["opp"]["NextHitAreaNowX"]
-        result[0][33] = data["opp"]["NextHitAreaNowY"]
+        # result[0][28] = data["opp"]["HitDamage"]
+        # result[0][29] = data["opp"]["HitAreaNowX"]
+        # result[0][30] = data["opp"]["HitAreaNowY"]
+        # result[0][31] = data["opp"]["NextHitDamage"]
+        # result[0][32] = data["opp"]["NextHitAreaNowX"]
+        # result[0][33] = data["opp"]["NextHitAreaNowY"]
+
+        result = np.zeros((1, len(data)))
+        for i in range(len(data)):
+            result[0][i] = data[i]
 
         return result
