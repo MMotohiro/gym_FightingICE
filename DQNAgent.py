@@ -44,17 +44,12 @@ class NN(object):
 
         self.model = Sequential()
 
-        #noob
+        #cyr Ai
         self.model.add(Dense(200, activation='relu', input_dim=143))
         self.model.add(Dense(200, activation='relu'))
         self.model.add(Dense(action_size, activation='linear', input_dim=200))
         self.model.compile(loss=huberloss, optimizer='adam')
 
-        #CYR_AI model
-        # self.model.add(Dense(200, activation='relu', input_dim=144))
-        # self.model.add(Dense(200, activation='relu'))
-        # self.model.add(Dense(40, activation='linear'))
-        # self.model.compile(loss=huberloss, optimizer='adam')
 
 
     # TODO: 入力データの型を決める
@@ -124,15 +119,14 @@ class DQNAgent(object):
 
         key = random.random()
         greedy_value = max((1.0 - (episode * 1.3 / maxEpisode))  * self.greedy_value , 0.05)
-        print(greedy_value)
+
         if key < greedy_value:
             random_action_value = random.randint(0, self.action_size-2)
             return Action(random_action_value+1)
-        
         action_value = self.model.predict(data)[0]
 
         # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)
-        # NOTE: +1しているのは列挙型が1startから？
+        # NOTE: +1しているのは列挙型が0ではなく1スタートだから
         best_action = Action(np.argmax(action_value)+1)
 
         return best_action

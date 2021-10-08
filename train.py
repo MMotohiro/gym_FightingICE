@@ -13,7 +13,7 @@ MODEL_PATH = "./model/" + MODEL_NAME
 def main():
     gymEnv = gym.make("FightingiceDataNoFrameskip-v0", java_env_path=".", port=4242)
     # HACK: aciontから自動で取ってこれるようにしておく
-    action_size = 56
+    action_size = 39
     learning_rate = 0.001
     batch_size = 10
     episode = 1000
@@ -24,6 +24,7 @@ def main():
     env = Observer(gymEnv, p2)
     agent = DQNAgent(learning_rate, action_size, greedy_value)
     try:
+        print("found model data.\nloading....")
         agent.model.load_model(MODEL_PATH)
     except:
         pass

@@ -40,14 +40,15 @@ class Trainer(object):
         startEpisode = 0
         try:
             with open(MODEL_TXT ,'r') as f:
-                startEpisode = int(f.read())    
+                startEpisode = int(f.read())   
+                print("start from " + str(startEpisode))
         except:
             f = open(MODEL_TXT , 'w')
             f.write('0')
             f.close()
     
-        for i in range(startEpisode ,episode):
-
+        for i in range(startEpisode, episode):
+            
             frame_data = self.env.reset()
             # NOTE: 学習出来るように変形しておく
             frame_data = self.env.flatten(frame_data)
@@ -56,6 +57,7 @@ class Trainer(object):
             state_len = len(frame_data[0])
             total_step = 0
             observation_s =self.env.get_observation_space()
+            print("start round " + str(i) +"/"+str(episode))
             while not done:
                 total_step += 1
                 # TODO: 毎回get_observation_spaceを実行しないようにしておく
@@ -76,7 +78,7 @@ class Trainer(object):
             # FIXME: envのlenの管理方法を考える
             inputs = np.zeros((batch_size, state_len))
             targets = np.zeros((batch_size, self.agent.action_size))
-
+            print("action_size:" + str( self.agent.action_size))
             print("学習開始")
             # ランダムに取り出した過去の行動記録から学習を実施(=experience replay)
             for j, (frame_data, action, reward, next_frame_data) in enumerate(batch):
@@ -89,20 +91,19 @@ class Trainer(object):
 
                 # TODO: 理論を理解する
                 targets[j] = self.agent.model.predict(frame_data)[0]
-                targets[j][action] = target
+                targets[j][action - 1] = target
 
+
+                    
             print("更新開始")
             self.agent.update(inputs, targets)
-
+            
             # NOTE: 試合が終了した際の敵と味方のHPの差を保存する
             print("記録")
             last_frame = self.memory.get_last_data()[0]
             reward_list.append(last_frame[0][0] - last_frame[0][11])
 
-            # 現在のepisode数を記録
-            with open(MODEL_TXT ,'w') as f:
-                f.write(str(i)) 
-
+            
             print("end round" + str(i+1) + "/" + str(episode))
             print("total step:"  + str(total_step))
             # 5試合ごとにモデルを保存
@@ -110,6 +111,10 @@ class Trainer(object):
                 print("save model....")
                 self.agent.model.save_model(MODEL_PATH)
                 print("done saving model!")
+
+                # 現在のepisode数を記録
+                with open(MODEL_TXT ,'w') as f:
+                    f.write(str(i)) 
 
         self.agent.model.save_model(MODEL_PATH)
         print("************\nmode save end\n************")
