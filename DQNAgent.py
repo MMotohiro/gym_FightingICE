@@ -30,14 +30,12 @@ def huberloss(y_true, y_pred) -> float:
 # HACK: NNを別ファイルに分離させてもいい
 class NN(object):
     """ 状態価値関数を予想する """
-    def __init__(self, learning_rate: float, action_size: int) -> None:
+    def __init__(self, action_size: int) -> None:
         """
         NNの初期化をやる
 
-        :param learning_rate: 学習率
         :param action_size: 実施出来る行動の数
         """
-        self.learning_rate = learning_rate
 
         # HACK: モデルの層の構成を簡単に変更出来るようにしておく
         # HACK: 途中のデータ数を決め打ちしないようにする
@@ -47,7 +45,7 @@ class NN(object):
         #cyr Ai
         self.model.add(Dense(200, activation='relu', input_dim=143))
         self.model.add(Dense(200, activation='relu'))
-        self.model.add(Dense(action_size, activation='linear', input_dim=200))
+        self.model.add(Dense(action_size, activation='linear'))
         self.model.compile(loss=huberloss, optimizer='adam')
 
 
@@ -61,7 +59,7 @@ class NN(object):
         :param label: 教師ラベル
         """
 
-        self.model.fit(data, label, epochs=4)
+        self.model.fit(data, label, epochs=20)
 
     def predict(self, data: any) -> List[float]:
         """
@@ -97,15 +95,14 @@ class DQNAgent(object):
     # TODO: モデルの保存や読み込み部分を実装する
 
 
-    def __init__(self, learning_rate: float, action_size: int, greedy_value: float) -> None:
+    def __init__(self, action_size: int, greedy_value: float) -> None:
         """
         初期化を実施
 
-        :param learning_rate: NNの学習率
         :param action_size: 実施出来るアクションの数
         :param greedy_value: グリーディー法を実施するかどうかの確率
         """
-        self.model = NN(learning_rate, action_size)
+        self.model = NN(action_size)
         self.action_size = action_size
         self.greedy_value = greedy_value
 
@@ -118,7 +115,7 @@ class DQNAgent(object):
         """
 
         key = random.random()
-        greedy_value = max((1.0 - (episode * 1.3 / maxEpisode))  * self.greedy_value , 0.05)
+        greedy_value = max((1.0 - (episode * 1.3 / maxEpisode))  * self.greedy_value , 0.01)
 
         if key < greedy_value:
             random_action_value = random.randint(0, self.action_size-2)

@@ -2,6 +2,7 @@ from typing import Dict
 import numpy as np
 from gym import spaces
 from typing import Tuple, List, Union
+from collections import deque
 
 class Observer(object):
     """ gymの環境から欲しい情報を抽出する """
@@ -43,6 +44,14 @@ class Observer(object):
         """
 
         return self._env.reset(p2=self.p2)
+    
+    def close(self):
+        """
+        環境を終了する
+
+        :return: None
+        """
+        self._env.close()
 
     def transform(self, frame_data: np.ndarray) -> Dict:
         """
@@ -165,5 +174,7 @@ class Observer(object):
         result = np.zeros((1, len(data)))
         for i in range(len(data)):
             result[0][i] = data[i]
+        
+
 
         return result

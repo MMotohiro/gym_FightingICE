@@ -4,3 +4,4 @@ __pycache__
 gym_fightingice.egg-info
 test_floder
 model/*
+log/*

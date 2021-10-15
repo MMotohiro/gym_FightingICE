@@ -4,7 +4,7 @@ from typing import List
 
 class Memory:
     """ experience replayを行う際に過去の行動情報を保持するクラス """
-    def __init__(self, max_size=1000) -> None:
+    def __init__(self, max_size=3000) -> None:
         """
         初期化を実施
 
