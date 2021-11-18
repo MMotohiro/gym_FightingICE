@@ -36,6 +36,9 @@ replay.init()
 e_list = []
 lt_list = []
 r_temp = 1
+
+sleep(5)
+
 # Main process
 for i in range(12000): # Simulate 100 frames
     # print("Replay: Run frame", i)    
@@ -58,10 +61,10 @@ for i in range(12000): # Simulate 100 frames
     replay.updateState()
     # lt servey
     r_num = framedata.getRound()
-    if r_temp != r_num and r_num >= 2:
-        r_temp = r_num
-        lt_temp = ltSurvery()
-        lt_list.append(lt_temp)
+    # if r_temp != r_num and r_num >= 2:
+    #     r_temp = r_num
+    #     lt_temp = ltSurvery()
+    #     lt_list.append(lt_temp)
         
 
     if replay.getState().name() == "CLOSE":
@@ -78,10 +81,13 @@ print(e_list)
 
 txt_list = []
 for i in e_list:
-    txt_list.append("".join(map(str, i)))
+    txt_list.append(",".join(map(str, i)))
 
 with open(LOG_PATH, mode='w') as f:
     f.writelines(txt_list)
+
+# with open(LT_PATH, mode='w') as f:
+#     f.writelines(lt_list)
 
 replay.close()
 
@@ -98,7 +104,7 @@ gateway.close()
 #         :param data: 変形したいデータ
 #         :return: 変形後のデータ
         
-#         こちらも同じくCYR_AI形式に対応
+#         TODO: 感情情報にも対応させる
 #         """
 
 #         result = np.zeros((1, len(data)+1 ))
