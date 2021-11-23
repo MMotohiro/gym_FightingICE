@@ -1,0 +1,2 @@
+model_checkpoint_path: "param.MOD02"
+all_model_checkpoint_paths: "param.MOD02"

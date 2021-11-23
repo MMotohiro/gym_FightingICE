@@ -3,5 +3,4 @@ __pycache__
 .vscode
 gym_fightingice.egg-info
 test_floder
-model/*
 log/*
