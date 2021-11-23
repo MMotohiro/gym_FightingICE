@@ -7,19 +7,20 @@ from rolebaseAgent import RoleBaseAgent
 from DQNAgent import DQNAgent
 from trainer import Trainer
 
-MODEL_NAME = "param.CYR04"
+MODEL_NAME = "param.MOD01"
 MODEL_PATH = "./model/" + MODEL_NAME
 
 def main():
     gymEnv = gym.make("FightingiceDataNoFrameskip-v0", java_env_path=".", port=4242)
     # HACK: aciontから自動で取ってこれるようにしておく
-    action_size = 39
+    action_size = 22
     batch_size = 500
     episode = 500
     gamma = 0.85
     greedy_value = 1.0
 
     p2 = "MctsAi"
+    p2 = RoleBaseAgent
     env = Observer(gymEnv, p2)
     agent = DQNAgent(action_size, greedy_value)
     try:

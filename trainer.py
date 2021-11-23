@@ -37,6 +37,7 @@ class Trainer(object):
         :param batch_size: experience replayを実施するときに用いる過去のデータ数
         :param gamma: 価値関数の値をどれだけ重要視するかどうか
         """
+        print("START TRAIN")
         reward_list = []
         startEpisode = 0
         try:
@@ -48,18 +49,22 @@ class Trainer(object):
             f.write('0')
             f.close()
     
+        print("MODEL LOADED")
         for i in range(startEpisode, episode):
-            
+            print(i)
+            print("flag A")
             frame_data = self.env.reset()
+            print("flag B")
             self.actLog = deque([38]*10,maxlen=10)
+            print("flag C")
             # NOTE: 学習出来るように変形しておく
             frame_data = self.env.flatten(frame_data)
             done = False
+            print("flag D")
             self.memory = Memory()
             state_len = len(frame_data[0])
             total_step = 0
             observation_s =self.env.get_observation_space()
-            
 
             print("*************")
             print("start round " + str(i) +"/"+str(episode))
