@@ -56,6 +56,6 @@ class Action(IntEnum):
     # STAND_GUARD_RECOV = auto()
     # STAND_RECOV = auto()
     THROW_A = auto()
-    THROW_B = auto()
+    # THROW_B = auto()
     # THROW_HIT = auto()
     # THROW_SUFFER = auto()

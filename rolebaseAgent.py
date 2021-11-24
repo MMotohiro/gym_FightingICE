@@ -1,4 +1,5 @@
 from py4j.java_gateway import get_field
+import random
 
 class RoleBaseAgent(object):
     """
@@ -19,9 +20,7 @@ class RoleBaseAgent(object):
 
     # please define this method when you use FightingICE version 3.20 or later
     def roundEnd(self, x, y, z):
-        print(x)
-        print(y)
-        print(z)
+        pass
 
       # please define this method when you use FightingICE version 4.00 or later
     def getScreenData(self, sd):
@@ -47,7 +46,6 @@ class RoleBaseAgent(object):
 
     def processing(self):
         if self.frameData.getEmptyFlag() or self.frameData.getRemainingFramesNumber() <= 0:
-            print("Start processing")
             self.isGameJustStarted = True
             return
 
@@ -93,25 +91,39 @@ class RoleBaseAgent(object):
         if not my_state.equals(self.gateway.jvm.enumerate.State.AIR) and not my_state.equals(self.gateway.jvm.enumerate.State.DOWN):
             # self.cc.commandCall("STAND_A")
             # If not in air
-            if distance > 150:
-                # If its too far, then jump to get closer fast
-                self.cc.commandCall("FOR_JUMP")
-            elif energy >= 20:
-                # High energy projectile
-                self.cc.commandCall("STAND_FB")
-            elif (distance > 100) and (energy >= 50):
+            # print("distance:" +str(distance) +" energy:" + str(energy))
+            if (distance > 400) and (energy >= 50):
+                # 距離があるとき波動
+                self.cc.commandCall("E")
+            elif (distance > 200) and (energy >= 50):
                 # 距離があるとき滑り込み
-                self.cc.commandCall("STAND_D_DB_BB")
+                self.cc.commandCall("T")
             elif opp_state.equals(self.gateway.jvm.enumerate.State.AIR): # If enemy on Air
                 # Perform a big punch
-                self.cc.commandCall("STAND_B")
-            elif distance > 100:
+                self.cc.commandCall("C")
+            elif distance > 200:
                 # Perform a quick dash to get closer
-                self.cc.commandCall("6 6 6")
+                self.cc.commandCall("6 6")
+            elif distance > 150:
+                # print("らんだむ")
+                rand = random.randint(0, 4)
+                if(rand == 0):
+                    # 大キック
+                    self.cc.commandCall("C")
+                elif(rand == 1):
+                    self.cc.commandCall("6 6")
+                else:
+                    self.cc.commandCall("FOR_JUMP")
             else:
-                # Perform a kick in all other cases, introduces randomness
-                self.cc.commandCall("STAND_A")
+                rand = random.randint(0, 1)
+                if(rand == 0):
+                    # 大キック
+                    self.cc.commandCall("A")
+                elif(rand == 1):
+                    self.cc.commandCall("4 4")
+                
         else:
+            # print("例外キック")
             # Perform a kick in all other cases, introduces randomness
             self.cc.commandCall("B")
 

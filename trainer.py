@@ -51,16 +51,12 @@ class Trainer(object):
     
         print("MODEL LOADED")
         for i in range(startEpisode, episode):
-            print(i)
-            print("flag A")
             frame_data = self.env.reset()
-            print("flag B")
+            print(type(frame_data))
             self.actLog = deque([38]*10,maxlen=10)
-            print("flag C")
             # NOTE: 学習出来るように変形しておく
             frame_data = self.env.flatten(frame_data)
             done = False
-            print("flag D")
             self.memory = Memory()
             state_len = len(frame_data[0])
             total_step = 0
@@ -80,7 +76,7 @@ class Trainer(object):
 
                 #rewardを正規化
                 if(reward != 0):
-                    reward = reward / 120
+                    reward = reward / 50
 
                 self.actLog.append(int(action))
                 # NOTE: 学習出来るように変形しておく

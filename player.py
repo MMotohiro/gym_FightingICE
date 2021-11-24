@@ -45,7 +45,6 @@ class Player(object):
                 next_frame_data, reward, done, info = self.env.step(action)
                 if(reward != 0):
                     print("reward:"+ str(reward))
-                    time.sleep(3)
 
                 # NOTE: 学習出来るように変形しておく
                 next_frame_data = self.env.flatten(next_frame_data)

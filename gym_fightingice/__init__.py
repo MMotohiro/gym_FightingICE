@@ -6,6 +6,11 @@ register(
 )
 
 register(
+    id='FightingiceDataNoFrameskipNd-v0',
+    entry_point='gym_fightingice.envs:FightingiceEnv_Data_NoFrameskipNodisplay',
+)
+
+register(
     id='FightingiceDataFrameskip-v0',
     entry_point='gym_fightingice.envs:FightingiceEnv_Data_Frameskip',
 )
