@@ -52,7 +52,6 @@ class Trainer(object):
         print("MODEL LOADED")
         for i in range(startEpisode, episode):
             frame_data = self.env.reset()
-            print(type(frame_data))
             self.actLog = deque([38]*10,maxlen=10)
             # NOTE: 学習出来るように変形しておく
             frame_data = self.env.flatten(frame_data)
@@ -72,7 +71,7 @@ class Trainer(object):
                 # TODO: 毎回get_observation_spaceを実行しないようにしておく
                 action = self.agent.get_action(frame_data, observation_s, i ,episode)
                 # アクションの実行、記録
-                next_frame_data, reward, done, info = self.env.step(action)
+                next_frame_data, reward, done, info = self.env.step(action.name)
 
                 #rewardを正規化
                 if(reward != 0):

@@ -3,6 +3,7 @@ import numpy as np
 from gym import spaces
 from typing import Tuple, List, Union
 from collections import deque
+import sys
 
 class Observer(object):
     """ gymの環境から欲しい情報を抽出する """
@@ -16,6 +17,7 @@ class Observer(object):
         """
         self._env = env
         self.p2 = p2
+        self.actToInt = []
 
     def get_observation_space(self) -> spaces:
         """
@@ -170,11 +172,15 @@ class Observer(object):
         # result[0][31] = data["opp"]["NextHitDamage"]
         # result[0][32] = data["opp"]["NextHitAreaNowX"]
         # result[0][33] = data["opp"]["NextHitAreaNowY"]
-
+        
         result = np.zeros((1, len(data)))
         for i in range(len(data)):
-            result[0][i] = data[i]
-        
+            try:
+                result[0][i] = data[i]
+            except:
+                print(i)
+                print(data[i])
+                sys.exit(1)
 
 
         return result

@@ -13,7 +13,7 @@ class RoleBaseAgent(object):
     def close(self):
         pass
 
-    def getInformation(self, frameData, isControl):
+    def getInformation(self, frameData, isControl, nonDelay = None):
         # Load the frame data every time getInformation gets called
         self.frameData = frameData
         self.cc.setFrameData(self.frameData, self.player)

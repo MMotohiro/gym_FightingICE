@@ -7,7 +7,7 @@ from rolebaseAgent import RoleBaseAgent
 from DQNAgent import DQNAgent
 from trainer import Trainer
 
-MODEL_NAME = "param.MOD03"
+MODEL_NAME = "param.MOD04"
 MODEL_PATH = "./model/" + MODEL_NAME
 
 def main():
