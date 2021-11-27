@@ -15,71 +15,49 @@ from py4j.java_gateway import JavaGateway, GatewayParameters, CallbackServerPara
 
 #LIST OF EMOTION
 KEY_LIST = {'1':"h0", '4':"h1", '7':"h2", '2':"a0", '5':"a1", '8':"a2", '3':"s0", '6':"s1", '9':"s2",}
-REPLAY_NAME = "TimeMode_KeyBoard_SimpleAI_2021.11.24-19.02.07"
+REPLAY_NAME = "lastgame"
 DOUNW_TIMER = 120
 
 def main():
     ep1,ep2 = Pipe()
-    th1 = Process(target=replay, args=(ep1,))
+    th1 = Process(target=replay, args=(ep1,REPLAY_NAME))
     th2 = Process(target=emotionGUI, args=(ep2,))
     th1.start()
     th2.start()
     
 
-def replay(ep):
+def replay(ep, REPLAY_NAME):
     gateway = JavaGateway(gateway_parameters=GatewayParameters(port=4242), callback_server_parameters=CallbackServerParameters());
     manager = gateway.entry_point
-    args = sys.argv
 
     dt_now = datetime.datetime.now()
-
-    REPLAY_NAME = "HPMode_KeyBoard_SimpleAI_2021.11.24-20.51.20"
-    # get replay path
-    try:
-        REPLAY_NAME = args[1]
-    except:
-        print("replay file is not found")
-        pass
-
     LOG_NAME = REPLAY_NAME + ".csv"
     LOG_PATH = "./logs/" + LOG_NAME
     LT_PATH =  "./logs/lt_" + LOG_NAME
-    #init replay
-    print("Replay: Loading")
-    replay = manager.loadReplay(REPLAY_NAME) # Load replay data
 
-    print("Replay: Init")
-    replay.init()
     e_list = []
     obs_list = []
     lt_list = []
     r_temp = 1
 
-    sleep(5)
+    #init replay
+    print("Replay: Loading")
+    replayF = manager.loadReplay(REPLAY_NAME) # Load replay data
+
+    print("Replay: Init")
+    replayF.init()
 
     DOUNW_TIMER = 120
     downCounter = DOUNW_TIMER
 
     # Main process
-    for i in range(12000): # Simulate 100 frames
+    for i in range(60000): 
         # print("Replay: Run frame", i)    
-        framedata = replay.getFrameData()
         if msvcrt.kbhit():
-            key = msvcrt.getch()
-            if key != b'\xe0':
-                key = key.decode()
-            else:
-                key = msvcrt.getch()
-
             if key == 'q':
                 break
-
-
         
-        # lt servey
-        r_num = framedata.getRound()
-
-
+        framedata = replayF.getFrameData()
         # 自分もしくは敵のダウンを検知
         downCounter -= 1
         if(not framedata.getCharacter(True) is None):
@@ -96,8 +74,9 @@ def replay(ep):
             obs.append(val)
             obs_list.append(obs)
 
-
-
+            # 終了処理
+            if(framedata.getCharacter(True).getHp() <= 0 or framedata.getCharacter(False).getHp() <= 0 or framedata.getRemainingTime() <= 0):
+                break
 
         # if r_temp != r_num and r_num >= 2:
         #     r_temp = r_num
@@ -105,16 +84,12 @@ def replay(ep):
         #     lt_list.append(lt_temp)
             
         sys.stdout.flush()
-        replay.updateState()
+        replayF.updateState()
 
-        if replay.getState().name() == "CLOSE":
-            break
+
         
     # end replay
     print("Replay: Close")
-    # print(e_list)
-
-    #dataset with dataframe
 
     # txt_list = []
     # for i in e_list:
@@ -122,8 +97,6 @@ def replay(ep):
 
     # with open(LOG_PATH, mode='w') as f:
     #     f.writelines(txt_list)
-
-    # np.savetxt(LOG_PATH, obs_list, delimiter = "")
 
     print(obs_list[:5])
     with open(LOG_PATH, "w", newline='') as f:
@@ -133,8 +106,7 @@ def replay(ep):
     # with open(LT_PATH, mode='w') as f:
     #     f.writelines(lt_list)
 
-    replay.close()
-
+    replayF.close()
     sys.stdout.flush()
 
     gateway.close_callback_server()

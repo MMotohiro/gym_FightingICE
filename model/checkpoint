@@ -1,2 +1,2 @@
-model_checkpoint_path: "MOD04.txt"
-all_model_checkpoint_paths: "MOD04.txt"
+model_checkpoint_path: "param.MOD05"
+all_model_checkpoint_paths: "param.MOD05"

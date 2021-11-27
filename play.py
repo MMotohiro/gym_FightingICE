@@ -7,11 +7,11 @@ from rolebaseAgent import RoleBaseAgent
 from DQNAgent import DQNAgent
 from player import Player
 
-MODEL_NAME = "param.MOD02"
+MODEL_NAME = "param.MOD04"
 MODEL_PATH = "./model/" + MODEL_NAME
 
 def main():
-    gymEnv = gym.make("FightingiceDataNoFrameskip-v0", java_env_path=".", port=4242)
+    gymEnv = gym.make("FightingiceDataFrameskip-v0", java_env_path=".", port=4242)
     # HACK: aciontから自動で取ってこれるようにしておく
     action_size = 20
     episode = 500
