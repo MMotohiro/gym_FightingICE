@@ -30,84 +30,94 @@ def replay(ep, REPLAY_NAME):
     gateway = JavaGateway(gateway_parameters=GatewayParameters(port=4242), callback_server_parameters=CallbackServerParameters());
     manager = gateway.entry_point
 
-    dt_now = datetime.datetime.now()
-    LOG_NAME = REPLAY_NAME + ".csv"
-    LOG_PATH = "./logs/" + LOG_NAME
-    LT_PATH =  "./logs/lt_" + LOG_NAME
+    
 
     e_list = []
     obs_list = []
     lt_list = []
     r_temp = 1
 
-    #init replay
-    print("Replay: Loading")
-    replayF = manager.loadReplay(REPLAY_NAME) # Load replay data
-
-    print("Replay: Init")
-    replayF.init()
-
-    DOUNW_TIMER = 120
-    downCounter = DOUNW_TIMER
-
-    # Main process
-    for i in range(60000): 
-        # print("Replay: Run frame", i)    
-        if msvcrt.kbhit():
-            if key == 'q':
-                break
-        
-        framedata = replayF.getFrameData()
-        # 自分もしくは敵のダウンを検知
-        downCounter -= 1
-        if(not framedata.getCharacter(True) is None):
-            selfState = framedata.getCharacter(True).getState()
-            oppState = framedata.getCharacter(False).getState()
-            val = "None"
-            if((selfState.name() == "DOWN" or oppState.name() == "DOWN") and downCounter < 0):
-                print("DOWN!")
-                downCounter = DOUNW_TIMER
-                # val = ep.recv()
-                val = "ok"
-            
-            obs = get_obs(framedata).tolist()
-            obs.append(val)
-            obs_list.append(obs)
-
-            # 終了処理
-            if(framedata.getCharacter(True).getHp() <= 0 or framedata.getCharacter(False).getHp() <= 0 or framedata.getRemainingTime() <= 0):
+    
+    while(True):
+        #スタートボタン待機
+        while(True):
+            signal = ep.recv()
+            if(signal[0] == "command" and signal[1] == "start"):
                 break
 
-        # if r_temp != r_num and r_num >= 2:
-        #     r_temp = r_num
-        #     lt_temp = ltSurvery()
-        #     lt_list.append(lt_temp)
+        #init file
+        dt_now = datetime.datetime.now()
+        LOG_NAME = dt_now.strftime('%Y%m%d_%H%M%S') + ".csv"
+        LOG_PATH = "./logs/" + LOG_NAME
+        LT_PATH =  "./logs/lt_" + LOG_NAME
+        #init replay
+        print("Replay: Loading")
+        replayF = manager.loadReplay(REPLAY_NAME) # Load replay data
+
+        print("Replay: Init")
+        replayF.init()
+
+        DOUNW_TIMER = 120
+        downCounter = DOUNW_TIMER
+
+        # Main process
+        for i in range(5000): 
+            # print("Replay: Run frame", i)    
             
+            framedata = replayF.getFrameData()
+            # 自分もしくは敵のダウンを検知
+            downCounter -= 1
+            if(not framedata.getCharacter(True) is None):
+                selfState = framedata.getCharacter(True).getState()
+                oppState = framedata.getCharacter(False).getState()
+                val = "None"
+                if((selfState.name() == "DOWN" or oppState.name() == "DOWN") and downCounter < 0):
+                    print("DOWN!")
+                    downCounter = DOUNW_TIMER
+                    signal = ep.recv()
+                    if(signal[0] == "emotion"):
+                        val = signal[1]
+                
+                obs = get_obs(framedata).tolist()
+                obs.append(val)
+                obs_list.append(obs)
+
+                print(framedata.getRemainingTimeMilliseconds())
+                print(type(framedata.getRemainingTimeMilliseconds()))
+                # 終了処理
+                if(framedata.getCharacter(True).getHp() <= 0 or framedata.getCharacter(False).getHp() <= 0 or framedata.getRemainingTimeMilliseconds() <= 200):
+                    break
+
+            # if r_temp != r_num and r_num >= 2:
+            #     r_temp = r_num
+            #     lt_temp = ltSurvery()
+            #     lt_list.append(lt_temp)
+                
+            sys.stdout.flush()
+            replayF.updateState()
+
+
+            
+        # end replay
+        print("Replay: Close")
+
+        # txt_list = []
+        # for i in e_list:
+        # #     txt_list.append(",".join(map(str, i)))
+
+        # with open(LOG_PATH, mode='w') as f:
+        #     f.writelines(txt_list)
+
+        print(obs_list[:5])
+        with open(LOG_PATH, "w", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(obs_list)
+
+        # with open(LT_PATH, mode='w') as f:
+        #     f.writelines(lt_list)
+
+        replayF.close()
         sys.stdout.flush()
-        replayF.updateState()
-
-
-        
-    # end replay
-    print("Replay: Close")
-
-    # txt_list = []
-    # for i in e_list:
-    # #     txt_list.append(",".join(map(str, i)))
-
-    # with open(LOG_PATH, mode='w') as f:
-    #     f.writelines(txt_list)
-
-    print(obs_list[:5])
-    with open(LOG_PATH, "w", newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(obs_list)
-
-    # with open(LT_PATH, mode='w') as f:
-    #     f.writelines(lt_list)
-
-    replayF.close()
-    sys.stdout.flush()
 
     gateway.close_callback_server()
     gateway.close()
@@ -286,7 +296,7 @@ def flatten(data,emotion = None) -> np.ndarray:
 #                      #
 #                      #
 
-def button_clk(ep, flag, val):
+def button_clk(ep, val):
     def inner():
         print(val)
         ep.send(val)
@@ -297,10 +307,23 @@ def emotionGUI(ep):
     GUI_HIGTH = 300
     EMOTION_LIST = ["恐怖", "怒り", "悲しい", "嫌悪", "喜び"]
 
+
     flag = False
     root = tk.Tk()
+
+    w = root.winfo_screenwidth()    #モニター横幅取得
+    h = root.winfo_screenheight()   #モニター縦幅取得
+    w = w - GUI_WIDTH                  #メイン画面横幅分調整
+    h = h - GUI_HIGTH -100                    #メイン画面縦幅分調整
+
     root.title("emotion survey")
-    root.geometry(str(GUI_WIDTH)+"x"+str(GUI_HIGTH))
+    root.geometry(str(GUI_WIDTH)+"x"+str(GUI_HIGTH) + "+" + str(w)+"+"+str(h) )
+
+    #replay start
+    button = tk.Button(text="START Replay",width=15, height = 1, font=("", 20))
+    func = button_clk(ep, ["command", "start"])
+    button.config(command=func)
+    button.place(x=30, y = GUI_HIGTH //6 - 20 )
 
     #ラベル表示
     Label = tk.Label(text = "強\n(Strong)",width=8, height = 2, font=("", 20))
@@ -308,16 +331,15 @@ def emotionGUI(ep):
     Label = tk.Label(text = "弱\n(Weak)",width=8, height = 2, font=("", 20))
     Label.place(x=0, y = GUI_HIGTH //6 * 4)
     Button = [[],[]]
-
     for i,emo in enumerate(EMOTION_LIST):
         # 強い感情
         Button[0].append(tk.Button(text=emo,width=8, height = 2, font=("", 20)))
-        func = button_clk(ep, flag, copy.copy(emo+"1"))
+        func = button_clk(ep, ["emotion", copy.copy(emo+"1")])
         Button[0][-1].config(command=func)
         Button[0][-1].place(x=GUI_WIDTH // 6 * (i+1) - 20, y = GUI_HIGTH //6 * 4)
         #弱い感情
         Button[1].append(tk.Button(text=emo,width=8, height = 2, font=("", 20)))
-        func = button_clk(ep, flag, emo+"0")
+        func = button_clk(ep,  ["emotion", copy.copy(emo+"0")])
         Button[1][-1].config(command=func)
         Button[1][-1].place(x=GUI_WIDTH // 6 * (i+1) - 20, y = GUI_HIGTH //6 * 2)
 
