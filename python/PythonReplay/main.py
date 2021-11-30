@@ -1,12 +1,7 @@
 import sys, os, datetime
 import numpy as np
-import msvcrt
-from threading import (Event, Thread)
-from time import sleep
-from ltSurvey import ltSurvery
 import tkinter as tk
 from multiprocessing import Process, Pipe
-import copy
 import csv
 
 sys.path .append('../')
@@ -41,8 +36,10 @@ def replay(ep, REPLAY_NAME):
     while(True):
         #スタートボタン待機
         while(True):
+            print("wait start game")
             signal = ep.recv()
             if(signal[0] == "command" and signal[1] == "start"):
+                print("get start signal")
                 break
 
         #init file
@@ -57,34 +54,37 @@ def replay(ep, REPLAY_NAME):
         print("Replay: Init")
         replayF.init()
 
-        DOUNW_TIMER = 120
-        downCounter = DOUNW_TIMER
+        DOUNW_TIMER =  10 * 60
+        downCounter = 0
 
         # Main process
         for i in range(5000): 
             # print("Replay: Run frame", i)    
             
             framedata = replayF.getFrameData()
-            # 自分もしくは敵のダウンを検知
-            downCounter -= 1
+            downCounter += 1
             if(not framedata.getCharacter(True) is None):
                 selfState = framedata.getCharacter(True).getState()
                 oppState = framedata.getCharacter(False).getState()
                 val = "None"
-                if((selfState.name() == "DOWN" or oppState.name() == "DOWN") and downCounter < 0):
+                #自分もしくは敵のダウンを検知
+                if((selfState.name() == "DOWN" or oppState.name() == "DOWN") and downCounter >= DOUNW_TIMER):
                     print("DOWN!")
-                    downCounter = DOUNW_TIMER
+                    downCounter = 0
                     signal = ep.recv()
                     if(signal[0] == "emotion"):
                         val = signal[1]
+
+                # if(framedata.getRemainingTimeMilliseconds() % 20000 <= 15 and framedata.getRemainingTimeMilliseconds() <= 60000):
+                #     signal = ep.recv()
+
                 
+                #ゲーム終了処理
                 obs = get_obs(framedata).tolist()
                 obs.append(val)
                 obs_list.append(obs)
-
                 print(framedata.getRemainingTimeMilliseconds())
                 print(type(framedata.getRemainingTimeMilliseconds()))
-                # 終了処理
                 if(framedata.getCharacter(True).getHp() <= 0 or framedata.getCharacter(False).getHp() <= 0 or framedata.getRemainingTimeMilliseconds() <= 200):
                     break
 
@@ -305,7 +305,7 @@ def button_clk(ep, val):
 def emotionGUI(ep):
     GUI_WIDTH = 960
     GUI_HIGTH = 300
-    EMOTION_LIST = ["恐怖", "怒り", "悲しい", "嫌悪", "喜び"]
+    EMOTION_LIST = ["不快な", "楽しい", "落ち込む", "いらいら", "怖い"]
 
 
     flag = False
@@ -323,25 +323,37 @@ def emotionGUI(ep):
     button = tk.Button(text="START Replay",width=15, height = 1, font=("", 20))
     func = button_clk(ep, ["command", "start"])
     button.config(command=func)
-    button.place(x=30, y = GUI_HIGTH //6 - 20 )
+    button.place(x=5, y = 0 )
 
     #ラベル表示
-    Label = tk.Label(text = "強\n(Strong)",width=8, height = 2, font=("", 20))
-    Label.place(x=0, y = GUI_HIGTH //6 * 2)
-    Label = tk.Label(text = "弱\n(Weak)",width=8, height = 2, font=("", 20))
-    Label.place(x=0, y = GUI_HIGTH //6 * 4)
+    Label = tk.Label(text = "強く感じる",width=10, height = 1, font=("", 15))
+    Label.place(x=10, y = GUI_HIGTH //9 * 3+3)
+    Label = tk.Label(text = "全く感じない",width=10, height = 1, font=("", 15))
+    Label.place(x=10, y = GUI_HIGTH //9 * 7+3)
     Button = [[],[]]
+
     for i,emo in enumerate(EMOTION_LIST):
+        #label
+        Label = tk.Label(text = emo,width=8, height = 2, font=("", 20))
+        Label.place(x=GUI_WIDTH // 6 * (i+1) - 20, y = GUI_HIGTH //6 * 1)
         # 強い感情
-        Button[0].append(tk.Button(text=emo,width=8, height = 2, font=("", 20)))
-        func = button_clk(ep, ["emotion", copy.copy(emo+"1")])
+        Button[0].append(tk.Button(text="強い",width=8, height = 1, font=("", 15)))
+        func = button_clk(ep, ["emotion", i * 3 + 2])
         Button[0][-1].config(command=func)
-        Button[0][-1].place(x=GUI_WIDTH // 6 * (i+1) - 20, y = GUI_HIGTH //6 * 4)
-        #弱い感情
-        Button[1].append(tk.Button(text=emo,width=8, height = 2, font=("", 20)))
-        func = button_clk(ep,  ["emotion", copy.copy(emo+"0")])
+        Button[0][-1].place(x=GUI_WIDTH // 6 * (i+1) - 8, y = GUI_HIGTH //9 * 3)
+        
+        #中い感情
+        Button[1].append(tk.Button(text="中",width=8, height = 1, font=("", 15)))
+        func = button_clk(ep,  ["emotion", i * 3 + 1])
         Button[1][-1].config(command=func)
-        Button[1][-1].place(x=GUI_WIDTH // 6 * (i+1) - 20, y = GUI_HIGTH //6 * 2)
+        Button[1][-1].place(x=GUI_WIDTH // 6 * (i+1) - 8 , y = GUI_HIGTH //9 * 5)
+
+
+        #弱い感情
+        Button[1].append(tk.Button(text="弱い",width=8, height = 1, font=("", 15)))
+        func = button_clk(ep,  ["emotion", i * 3])
+        Button[1][-1].config(command=func)
+        Button[1][-1].place(x=GUI_WIDTH // 6 * (i+1) - 8 , y = GUI_HIGTH //9 * 7)
 
 
 
