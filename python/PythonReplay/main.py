@@ -27,10 +27,7 @@ def replay(ep, REPLAY_NAME):
 
     
 
-    e_list = []
-    obs_list = []
-    lt_list = []
-    r_temp = 1
+    
 
     
     while(True):
@@ -47,6 +44,8 @@ def replay(ep, REPLAY_NAME):
         LOG_NAME = dt_now.strftime('%Y%m%d_%H%M%S') + ".csv"
         LOG_PATH = "./logs/" + LOG_NAME
         LT_PATH =  "./logs/lt_" + LOG_NAME
+        #init data
+        obs_list = []
         #init replay
         print("Replay: Loading")
         replayF = manager.loadReplay(REPLAY_NAME) # Load replay data
