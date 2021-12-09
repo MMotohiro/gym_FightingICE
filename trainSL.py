@@ -25,9 +25,9 @@ def main():
         rawData = [row for row in reader]
     #csv to numpy ndarray
     rawData = rawData[:][:-1]
-    data = 
-    label = 
-    model.fit(data,label)
+    inputs =  np.array(rawData)
+    targets = np.zeros(5,5)
+    model.fit(inputs,targets)
 
 
     
