@@ -45,8 +45,8 @@ class NN(object):
         #cyr Ai
         self.model.add(Dense(200, activation='relu', input_dim=143))
         self.model.add(Dense(200, activation='relu'))
-        self.model.add(Dense(action_size, activation='linear'))
-        self.model.compile(loss=huberloss, optimizer='adam')
+        self.model.add(Dense(action_size, activation='softmax'))
+        self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
 
 
 
@@ -71,6 +71,9 @@ class NN(object):
         # NOTE: 出力値はそれぞれの行動を実施すべき確率
         # HACK: 整形部分はここでやりたくない
         return self.model.predict(data)
+    
+    def evaluate(self, data: any, label: any):
+        return self.model.evaluate(data,label)
 
     def save_model(self, model_path: str):
         """

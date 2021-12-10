@@ -1,2 +1,2 @@
-model_checkpoint_path: "param.MOD05"
-all_model_checkpoint_paths: "param.MOD05"
+model_checkpoint_path: "param.SL01"
+all_model_checkpoint_paths: "param.SL01"
