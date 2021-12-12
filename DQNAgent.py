@@ -3,7 +3,8 @@ from gym import spaces
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, GRU, LSTM
+from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
 import random
 
@@ -46,9 +47,9 @@ class NN(object):
         self.model.add(Dense(200, activation='relu', input_dim=143))
         self.model.add(Dense(200, activation='relu'))
         self.model.add(Dense(action_size, activation='softmax'))
-        self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
-
-
+        # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
+        print(self.model.summary())
 
     # TODO: 入力データの型を決める
     def fit(self, data: any, label: any) -> None:
@@ -59,7 +60,70 @@ class NN(object):
         :param label: 教師ラベル
         """
 
-        self.model.fit(data, label, epochs=20)
+        self.model.fit(data, label, batch_size=32, epochs=10)
+
+    def predict(self, data: any) -> List[float]:
+        """
+        現在の状態から最適な行動を予想する
+
+        :param data: 入力(現在の状態)
+        """
+
+        # NOTE: 出力値はそれぞれの行動を実施すべき確率
+        # HACK: 整形部分はここでやりたくない
+        return self.model.predict(data)
+    
+    def evaluate(self, data: any, label: any):
+        return self.model.evaluate(data,label)
+
+    def save_model(self, model_path: str):
+        """
+        モデルを保存する
+
+        :param model_path: 保存先のパス
+        """
+        self.model.save_weights(model_path)
+
+    def load_model(self, model_path: str):
+        """
+        学習済みのモデルを読み込む
+
+        :param model_path: 読み込みたいモデルのパス
+        """
+        self.model.load_weights(model_path)
+
+class NNLSTM(object):
+    """ 状態価値関数を予想する """
+    def __init__(self, action_size: int) -> None:
+        """
+        NNの初期化をやる
+
+        :param action_size: 実施出来る行動の数
+        """
+
+        # HACK: モデルの層の構成を簡単に変更出来るようにしておく
+        # HACK: 途中のデータ数を決め打ちしないようにする
+
+        self.model = Sequential()
+
+        #cyr Ai
+        self.model.add(LSTM(200,batch_input_shape = (None, 10, action_size)))
+        self.model.add(Dense(200, activation='relu'))
+        self.model.add(Dense(action_size, activation='softmax'))
+        # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
+        print(self.model.summary())
+
+    # TODO: 入力データの型を決める
+    def fit(self, data: any, label: any) -> None:
+        """
+        学習を実施する
+
+        :param data: 教師データ
+        :param label: 教師ラベル
+        """
+
+        self.model.fit(data, label, batch_size=32,validation_split=0.1, epochs=20, shuffle=False)
 
     def predict(self, data: any) -> List[float]:
         """

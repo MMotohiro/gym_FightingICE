@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os, sys
 from collections import deque
 from memory import Memory
-from DQNAgent import NN
+from DQNAgent import NN, NNLSTM
 import json, csv
 import glob
 
@@ -16,42 +16,55 @@ TEST_PATH = "./learningData/test/"
 
 def main():
     action_size = 15
-    batch_size = 500
-    episode = 500
     gamma = 0.85
     greedy_value = 1.0
     rawData = None
     files = glob.glob(TRAIN_PATH +"*.json")
     datas = []
-
+    test_targets = [0] * 15
 
     # read json
     for file in files:
         with open(file, 'r') as f:
-            rawData = json.load(f)
-            datas.extend(rawData["rounds"][0])
+            try:
+                rawData = json.load(f)
+                datas.extend(rawData["rounds"][0])
+            except:
+                pass
     
+    #model init
+    model = NN(action_size)    
+
     #json to numpy ndarray
     state_len = len(get_obs(datas[0]))
     inputs =  np.zeros((len(datas),state_len))
     targets = np.zeros((len(datas),action_size))
-    
+    print("data size:", len(datas))
+    print("state len:", state_len)
+
     for i,data in enumerate(datas):
         inputs[i:i+1] = get_obs(data)
         targets[i][get_target(data)] = 1
+        test_targets[get_target(data)] += 1
 
-    print("mode save")
-    model = NN(action_size)    
+    print(inputs[0:5])
+    print(targets[0:5])
+    print(test_targets)
     model.fit(inputs,targets)
 
     #test
     files = glob.glob(TEST_PATH +"*.json")
     testDatas = []
+
     # read json
     for file in files:
         with open(file, 'r') as f:
-            rawData = json.load(f)
-            testDatas.extend(rawData["rounds"][0])
+            try:
+                rawData = json.load(f)
+                testDatas.extend(rawData["rounds"][0])
+            except:
+                pass
+
     state_len = len(get_obs(testDatas[0]))
     testInputs =  np.zeros((len(testDatas),state_len))
     testTargets = np.zeros((len(testDatas),action_size))
@@ -69,29 +82,31 @@ def get_target(data):
     #ボタン処理
     button = [my["key_a"] , my["key_b"] , my["key_c"] , my["key_e"] , my["key_s"] , my["key_t"] ]
     for i in button:
-        if(i == "True"):
-            return button.index("True") + 9
-    
+        if(i):
+            return button.index(True) + 9
+
     #移動処理
     stick = [my["key_up"], my["key_down"], my["key_left"], my["key_right"]]
-    if(stick[2] == "True"):
-        if(stick[0] == "True"):
+
+    if(stick[2]):
+        if(stick[0]):
             return 6
-        elif(stick[1] == "True"):
+        elif(stick[1]):
             return 0
         else:
             return 3
-    elif(stick[3] == "True"):
-        if(stick[0] == "True"):
+    elif(stick[3]):
+        if(stick[0]):
             return 8
-        elif(stick[1] == "True"):
+        elif(stick[1]):
             return 2
         else:
             return 5
-    elif(stick[0] == "True"):
-        return 6
-    elif(stick[1] == "True"):
+    elif(stick[0]):
+        return 7
+    elif(stick[1]):
         return 1
+    
     return 4
 
 def get_obs(data):
