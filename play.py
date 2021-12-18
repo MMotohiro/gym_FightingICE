@@ -7,18 +7,19 @@ from rolebaseAgent import RoleBaseAgent
 from DQNAgent import DQNAgent
 from player import Player
 
-MODEL_NAME = "param.MOD04"
+MODEL_NAME = "param.SL04"
 MODEL_PATH = "./model/" + MODEL_NAME
 
 def main():
     gymEnv = gym.make("FightingiceDataFrameskip-v0", java_env_path=".", port=4242)
     # HACK: aciontから自動で取ってこれるようにしておく
-    action_size = 20
+    action_size = 15
     episode = 500
     greedy_value = 0
 
     p2 = RoleBaseAgent
     env = Observer(gymEnv, p2)
+    # env = Observer(gymEnv, "KeyBoard")
     agent = DQNAgent(action_size, greedy_value)
     try:
         print("found model data.\nloading....")

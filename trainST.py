@@ -8,7 +8,7 @@ from DQNAgent import NN, NNTuner
 import json, csv
 import glob
 
-MODEL_NAME = "param.SL04"
+MODEL_NAME = "param.ST04"
 MODEL_PATH = "./model/" + MODEL_NAME
 TRAIN_PATH = "./learningData/train/"
 TEST_PATH = "./learningData/test/"

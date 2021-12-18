@@ -110,8 +110,10 @@ class FightingiceEnv_Data_Frameskip(gym.Env):
 
         if self.system_name == "windows":
             # -Xms1024m -Xmx1024m we need set this in windows
-            self.java_env = subprocess.Popen(["java", "-Xms1024m", "-Xmx1024m", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode",
-                                          "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
+            # self.java_env = subprocess.Popen(["java", "-Xms1024m", "-Xmx1024m", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode",
+            #                               "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400", "--err-log"], stdout=devnull, stderr=devnull)
+            self.java_env = subprocess.Popen(["java", "-Xms1024m", "-Xmx1024m", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j",
+                                          "--grey-bg", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
         elif self.system_name == "linux":
             self.java_env = subprocess.Popen(["java", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode",
                                             "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)

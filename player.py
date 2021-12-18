@@ -37,12 +37,15 @@ class Player(object):
             print("*************")
             print("start round " + str(i) +"/"+str(episode))
             print("*************")
-
+            act_log = [0]*15
             while not done:
                 total_step += 1
-                action = self.agent.get_action(frame_data, observation_s, i ,episode)
+                action = self.agent.get_action(frame_data, observation_s, episode ,episode)
                 # アクションの実行、記録
-                next_frame_data, reward, done, info = self.env.step(action)
+                actList = ["1","2","3","4","9","6","7","8","9", "A","B","C","E","S","T"]
+                act_log[action]+=1
+
+                next_frame_data, reward, done, info = self.env.step(actList[action])
                 if(reward != 0):
                     print("reward:"+ str(reward))
 
@@ -56,5 +59,6 @@ class Player(object):
                         self.env.close()
                         exit()
 
+            print(act_log)
             print("end round" + str(i+1) + "/" + str(episode))
             print("total step:"  + str(total_step))
