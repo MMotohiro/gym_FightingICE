@@ -4,34 +4,39 @@ import matplotlib.pyplot as plt
 import os, sys
 from collections import deque
 from memory import Memory
-from DQNAgent import NN, NNTuner
+from DQNAgent import NN, LSTM
 import json, csv
 import glob
 
-MODEL_NAME = "param.ST04"
+MODEL_NAME = "param.LT01"
 MODEL_PATH = "./model/" + MODEL_NAME
 TRAIN_PATH = "./learningData/train/"
 TEST_PATH = "./learningData/test/"
 
 
 def main():
-    action_size = 15
+    action_size = 3
     rawData = None
-    files = glob.glob(TRAIN_PATH +"*.json")
+    files = glob.glob(DATA_PATH +"*.csv")
     datas = []
-    test_targets = [0] * 15
+    test_targets = [0] * 3
     
     #model init
     model = NN(action_size) 
 
-    # read json
+    model.load__model(MODEL_PATH)
+    model1.load_model(MODEL_PATH)
+
+
+
+    # read csv
     for file in files:
         with open(file, 'r') as f:
             try:
-                rawData = json.load(f)
-                datas.extend(rawData["rounds"][0])
+                reader = csv.reader(f)
+                datas.extend([row for row in reader])
             except:
-                pass   
+                pass
 
     #json to numpy ndarray
     state_len = len(get_obs(datas[0]))
@@ -40,37 +45,40 @@ def main():
     print("data size:", len(datas))
     print("state len:", state_len)
 
-    temp = 5
-    tempC = None
-    timer = 0
-    count = 0
-    for i,data in enumerate(datas):
-        act = get_target(data)
-        
-        if(temp > 8 and act < 9): #前フレームまで技を出していて,今移動フレームなら
-            timer = 10
-            tempC = temp
+    for i, data in enumerate(datas):
+        if(data[-1] != "None"):
+            #最初と最後だけでいいの
+            downCount = [0,0] #39
+            if(data[27] == "1"):
+                downCount[0] += 1
+            elif(data[92]== "1"):
+                downCount[1] += 1
+            damage = [0,0]
+            damage[0] = temp[4] - data[0]
+            damage[1] = temp[5] - data[65]
 
-        if(timer != 0):
-            if(act < 9): #移動ならタイマー減らして行動を技に
-                timer -= 1
-                act = tempC
-            else:
-                timer = 0    
+            hp = [0,0]
+            hp = [data[0],data[65]]
+            energy = [data[1],data[66]]
+            
+            myOppX = [data[2],data[67]]
+            range = abs(data[2]-data[67])
+            time = i - temp[11] 
 
-        # if(act == 4): #移動もしくはタイマーが0以上のとき
-        #     temp = get_target(data)
-        #     continue
-        inputs[count:count+1] = get_obs(data)
-        targets[count][act] = 1
-        test_targets[act] += 1
-        
-        temp = get_target(data)
-        count += 1
-        
 
-    inputs = inputs[:count]
-    targets = targets[:count]
+
+            val = []
+            val.extend(downCount)
+            val.extend(damage)
+            val.extend(hp)
+            val.extend(energy)
+            val.append(range)
+            val.enxtend(myOppX)
+            val.append(time)
+
+
+
+        
 
     print(inputs[0:5])
     print(targets[0:5])
@@ -79,11 +87,15 @@ def main():
     print("* START TRAIN*")
     print("**************")
 
+    
 
-    model.fit(inputs,targets)
+
+    # model.fit(inputs,targets)
+    
     #model init
     # model = NNTuner(action_size, inputs,targets) 
     # model.fit()
+
 
     #test
     files = glob.glob(TEST_PATH +"*.json")
@@ -127,8 +139,9 @@ def main():
     
 
     for i,data in enumerate(testInputs):
-        # print(np.argmax(model.predict(data.reshape(1,len(data)))))
-        test_targets[np.argmax(model.predict(data.reshape(1,len(data))))] += 1
+        print(np.argmax(model.predict(data.reshape(1,len(data)))))
+        print(np.argmax(model1.predict(data.reshape(1,len(data)))))
+        # test_targets[np.argmax(model.predict(data.reshape(1,len(data))))] += 1
     
     los, acc = model.evaluate(testInputs, testTargets)
     print("loss=", los)
@@ -137,41 +150,6 @@ def main():
     model.save_model(MODEL_PATH)
 
 
-# スティック1~9とボタンA~Tを、0から14に割り当てる
-# スティック1~9 → 0~8
-# ボタンA~T → 9~14
-def get_target(data):
-    my = data["P1"]
-    
-    #ボタン処理
-    button = [my["key_a"] , my["key_b"] , my["key_c"] , my["key_e"] , my["key_s"] , my["key_t"] ]
-    for i in button:
-        if(i):
-            return button.index(True) + 9
-
-    #移動処理
-    stick = [my["key_up"], my["key_down"], my["key_left"], my["key_right"]]
-
-    if(stick[2]):
-        if(stick[0]):
-            return 6
-        elif(stick[1]):
-            return 0
-        else:
-            return 3
-    elif(stick[3]):
-        if(stick[0]):
-            return 8
-        elif(stick[1]):
-            return 2
-        else:
-            return 5
-    elif(stick[0]):
-        return 7
-    elif(stick[1]):
-        return 1
-    
-    return 4
 
 def get_obs(data):
     my = data["P1"]

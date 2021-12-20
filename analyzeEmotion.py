@@ -9,7 +9,7 @@ def main():
     rawData = None
     files = glob.glob(DATA_PATH +"*.csv")
     datas = []
-    sample = [0 for _ in range(3)] * 20
+    sample = [[0]*20 for _ in range(3)] 
    
     # read csv
     for file in files:
@@ -26,7 +26,7 @@ def main():
         if(data[-1] != "None"): 
             val = int(data[-1])
             try:
-                hpDiff = int(data[0]*400 - data[65]*400)
+                hpDiff = int(float(data[0])*400 - float(data[65])*400)
                 if(hpDiff > 50):
                     sample[0][val] += 1
                 elif(hpDiff < -50):
