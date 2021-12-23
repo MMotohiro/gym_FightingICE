@@ -1,101 +1,151 @@
 import numpy as np
 import time
+import random
 import matplotlib.pyplot as plt
 import os, sys
 from collections import deque
 from memory import Memory
-from DQNAgent import NN, LSTM
+from sklearn.metrics import confusion_matrix
+from DQNAgent import NN_emotion, NNTuner
 import json, csv
 import glob
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
 
-MODEL_NAME = "param.LT01"
+MODEL_NAME = "param.LT04"
 MODEL_PATH = "./model/" + MODEL_NAME
-TRAIN_PATH = "./learningData/train/"
+TRAIN_PATH = "./learningData/csv/"
 TEST_PATH = "./learningData/test/"
 
 
 def main():
     action_size = 3
     rawData = None
-    files = glob.glob(DATA_PATH +"*.csv")
+    files = glob.glob(TRAIN_PATH +"*.csv")
     datas = []
     test_targets = [0] * 3
-    
+    print("model init")
     #model init
-    model = NN(action_size) 
-
-    model.load__model(MODEL_PATH)
-    model1.load_model(MODEL_PATH)
-
-
-
+    
+    
+    print("load csv")
     # read csv
     for file in files:
         with open(file, 'r') as f:
             try:
                 reader = csv.reader(f)
-                datas.extend([row for row in reader])
+                datas.extend([row + [i]  for i, row in enumerate(reader)])
             except:
                 pass
 
     #json to numpy ndarray
-    state_len = len(get_obs(datas[0]))
-    inputs =  np.zeros((len(datas),state_len))
-    targets = np.zeros((len(datas),action_size))
-    print("data size:", len(datas))
-    print("state len:", state_len)
+    len_emotoin = 2
+  
+    inputs =  []
+    targets = []
+    emotion = []
+    temp = [1] * 15
+    timer = 0
+    downCount = [0,0]
+    flag = True
 
-    for i, data in enumerate(datas):
-        if(data[-1] != "None"):
-            #最初と最後だけでいいの
-            downCount = [0,0] #39
-            if(data[27] == "1"):
+    for i, data in enumerate(datas[1:]):
+        if(data[143] != "None"):
+            if(data[-1] < timer):
+                downCount = [0,0]
+                flag = True
+                temp = [1] * 15
+            timer = data[-1]
+            #最初と最後だけでいいの    
+            if(data[27] == "1.0"):
                 downCount[0] += 1
-            elif(data[92]== "1"):
+            elif(data[92]== "1.0"):
                 downCount[1] += 1
+
             damage = [0,0]
-            damage[0] = temp[4] - data[0]
-            damage[1] = temp[5] - data[65]
+            damage[0] = temp[2] - float(data[0])
+            damage[1] = temp[3] - float(data[65])
 
-            hp = [0,0]
-            hp = [data[0],data[65]]
-            energy = [data[1],data[66]]
+            hp = [float(data[0]),float(data[65])]
+            # energy = [float(data[1]),float(data[66])]
             
-            myOppX = [data[2],data[67]]
-            range = abs(data[2]-data[67])
-            time = i - temp[11] 
+            myOppX = [float(data[2]),float(data[67])]
+            # dist = abs(float(data[2])-float(data[67]))
+            # time = i - temp[11] 
+            if(flag):
+                flag = False
+                target_temp = target_converter(data[143])
+                emotion = [target_temp[0], target_temp[1], target_temp[2]]* len_emotoin
+                time = float(data[-1])
 
+            down = [0.0, 0.0]
+            if(data[27] == "1.0"):
+                down[0] = 1.0
+            elif(data[92] == "1.0"):
+                down[1] = 1.0
 
 
             val = []
-            val.extend(downCount)
+            # val.extend([downCount[0] / 10, downCount[1] / 10])
             val.extend(damage)
             val.extend(hp)
-            val.extend(energy)
-            val.append(range)
-            val.enxtend(myOppX)
-            val.append(time)
+            # val.extend(energy)
+            # val.append(dist)
+            val.extend(myOppX)
+            # val.append(time)
+            val.extend(down)
+            val.extend(emotion)
+            
+            rand_key = random.randint(0,2)
+            if(target_converter(data[143])[0] == 1 and rand_key != 0):
+                pass
+            else:
+                inputs.append(val)
+                targets.append(target_converter(data[143]))
 
+            emotion[3:].extend(target_converter(data[143]))
+            # emotion = [].extend(target_converter(data[143]))
+            temp = val
 
 
         
-
-    print(inputs[0:5])
+    inputs = np.array(inputs)
+    targets = np.array(targets)
+    print("data size:",len(inputs))
+    print(inputs[0:20])
     print(targets[0:5])
     print(test_targets)
+
+    model = NN_emotion(3) 
+    # model = NNTuner(3,inputs,targets) 
     print("**************")
     print("* START TRAIN*")
     print("**************")
-
-    
-
-
-    # model.fit(inputs,targets)
+    model.fit(inputs,targets)
     
     #model init
     # model = NNTuner(action_size, inputs,targets) 
     # model.fit()
 
+    predict_x = model.predict(inputs)
+    predict_classes = predict_x.argmax(axis = 1)
+    true_classes = targets.argmax(axis = 1)
+    print("pred_x:",predict_classes)
+    print("pred_y:",true_classes)
+    sample_x = [0,0,0]
+    sample_y = [0,0,0]
+    for i in true_classes:
+        sample_y[i]+=1
+    for i in predict_classes:
+        sample_x[i]+=1
+    print(sample_x)
+    print(sample_y)
+    print(confusion_matrix(true_classes, predict_classes))
+
+    model.save_model(MODEL_PATH)
+    print_cmx(true_classes, predict_classes)
+    return 0
 
     #test
     files = glob.glob(TEST_PATH +"*.json")
@@ -148,6 +198,89 @@ def main():
     print("acc =",acc)
     print(test_targets)
     model.save_model(MODEL_PATH)
+
+    # 感情情報をone hotに変換する
+    # [1,0,0] 楽しい
+    # [0,1,0] 怒り
+    # [0,0,1] 悲しみ
+def target_converter(val):
+    key = int(val)
+    if(key == 0):
+        return  [0,0,1]        
+    elif(key == 1):
+        return  [0,0,1]
+    elif(key == 2):
+        return [0,0,1]
+    elif(key == 3):
+        return [1,0,0]
+    elif(key == 4):
+        return [1,0,0]
+    elif(key == 5):
+        return [1,0,0]
+    elif(key == 7):
+        return [0,0,1]
+    elif(key == 8):
+        return [0,0,1]
+    elif(key == 9):
+        return [0,0,1]
+    elif(key == 10):
+        return [0,1,0]
+    elif(key == 11):
+        return [0,1,0]
+    elif(key == 12):
+        return [0,1,0]
+    elif(key == 13):
+        return [0,1,0]
+    elif(key == 14):
+        return [0,1,0]
+    elif(key == 15):
+        return [0,1,0]
+    return [0,0,0]
+
+# def target_converter(val):
+#     key = int(val)
+#     if(key == 0):
+#         return  [0,0,0.5]        
+#     elif(key == 1):
+#         return  [0,0,0.8]
+#     elif(key == 2):
+#         return [0,0,1]
+#     elif(key == 3):
+#         return [0.5,0,0]
+#     elif(key == 4):
+#         return [0.8,0,0]
+#     elif(key == 5):
+#         return [1,0,0]
+#     elif(key == 7):
+#         return [0,0,1]
+#     elif(key == 8):
+#         return [0,0,1]
+#     elif(key == 9):
+#         return [0,0,1]
+#     elif(key == 10):
+#         return [0,0.5,0]
+#     elif(key == 11):
+#         return [0,0.8,0]
+#     elif(key == 12):
+#         return [0,1,0]
+#     elif(key == 13):
+#         return [0,1,0]
+#     elif(key == 14):
+#         return [0,1,0]
+#     elif(key == 15):
+#         return [0,1,0]
+#     return [0,0,0]
+    
+def print_cmx(y_true, y_pred):
+    labels = sorted(list(set(y_true)))
+    cmx_data = confusion_matrix(y_true, y_pred, labels=labels)
+    
+    df_cmx = pd.DataFrame(cmx_data, index=labels, columns=labels)
+ 
+    plt.figure(figsize = (12,7))
+    sn.heatmap(df_cmx, annot=True, fmt='g' ,square = True)
+    plt.show()
+ 
 
 
 

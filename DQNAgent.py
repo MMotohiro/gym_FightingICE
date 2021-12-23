@@ -4,7 +4,8 @@ import optuna
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, GRU, LSTM
+from tensorflow.keras.layers import Dense, Dropout, GRU, LSTM
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 import tensorflow.keras.backend as K
 import numpy as np
@@ -62,7 +63,73 @@ class NN(object):
         :param label: 教師ラベル
         """
 
-        self.model.fit(data, label, batch_size=32, epochs=128, validation_split=0.1)
+        return self.model.fit(data, label, batch_size=64, epochs=64, validation_split=0.1)
+
+    def predict(self, data: any) -> List[float]:
+        """
+        現在の状態から最適な行動を予想する
+
+        :param data: 入力(現在の状態)
+        """
+
+        # NOTE: 出力値はそれぞれの行動を実施すべき確率
+        # HACK: 整形部分はここでやりたくない
+        return self.model.predict(data)
+    
+    def evaluate(self, data: any, label: any):
+        return self.model.evaluate(data,label)
+
+
+    def save_model(self, model_path: str):
+        """
+        モデルを保存する
+
+        :param model_path: 保存先のパス
+        """
+        self.model.save_weights(model_path)
+
+    def load_model(self, model_path: str):
+        """
+        学習済みのモデルを読み込む
+
+        :param model_path: 読み込みたいモデルのパス
+        """
+        self.model.load_weights(model_path)
+
+class NN_emotion(object):
+    """ 状態価値関数を予想する """
+    def __init__(self, action_size: int) -> None:
+        """
+        NNの初期化をやる
+
+        :param action_size: 実施出来る行動の数
+        """
+
+        # HACK: モデルの層の構成を簡単に変更出来るようにしておく
+        # HACK: 途中のデータ数を決め打ちしないようにする
+
+        self.model = Sequential()
+
+        #cyr Ai
+        self.model.add(Dense(100, activation='relu', input_dim=14))
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(300, activation='relu'))
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(action_size, activation='softmax'))
+        # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss="categorical_crossentropy", optimizer=Adam(learning_rate=0.00001), metrics=['accuracy'])
+        print(self.model.summary())
+
+    # TODO: 入力データの型を決める
+    def fit(self, data: any, label: any) -> None:
+        """
+        学習を実施する
+
+        :param data: 教師データ
+        :param label: 教師ラベル
+        """
+
+        self.model.fit(data, label, batch_size=32, epochs= 200, validation_split=0.1)
 
     def predict(self, data: any) -> List[float]:
         """
@@ -109,7 +176,7 @@ class NNTuner(object):
         self.train_y = train_y
     
     # TODO: 入力データの型を決める
-    def fit(self) -> None:
+    def fit(self, train_x, train_y) -> None:
         """
         学習を実施する
 
@@ -161,26 +228,22 @@ class NNTuner(object):
         # #最適化するパラメータの設定
 
         #FC層のユニット数
-        mid_units1 = int(trial.suggest_discrete_uniform("mid_units1", 100, 500, 100))
-        mid_units2 = int(trial.suggest_discrete_uniform("mid_units2", 100, 500, 100))
-
-        #optimizer
-        optimizer = trial.suggest_categorical("optimizer", ["sgd", "adam", "rmsprop"])
-
+        mid_units1 = int(trial.suggest_discrete_uniform("mid_units1", 50, 300, 50))
+        mid_units2 = int(trial.suggest_discrete_uniform("mid_units2", 50, 300, 50))
 
         #cyr Ai
         model = Sequential()
-        model.add(Dense(mid_units1, activation='relu', input_dim=143))
+        model.add(Dense(mid_units1, activation='relu', input_dim=14))
         model.add(Dense(mid_units2, activation='relu'))
         model.add(Dense(self.action_size, activation='softmax'))
         # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
-        model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+        model.compile(loss="categorical_crossentropy", optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
         print("model compile")
-        history = model.fit(train_x_copy, train_y_copy, verbose=0, epochs=10, batch_size=128, validation_split=0.1)
+        history = model.fit(train_x_copy, train_y_copy, verbose=0, epochs=16, batch_size=8, validation_split=0.1)
 
         #セッションのクリア
         K.clear_session()
-        del model, optimizer, mid_units1, mid_units2, train_x_copy, train_y_copy
+        del model, mid_units1, mid_units2, train_x_copy, train_y_copy
         
 
         #検証用データに対する正答率が最大となるハイパーパラメータを求める
@@ -299,3 +362,78 @@ class DQNAgent(object):
         """
 
         self.model.fit(data, label)
+
+class EmotionAgent(object):
+    """
+    深層学習を用いて行動選択を行うエージェント
+    """
+    # TODO: モデルの保存や読み込み部分を実装する
+
+
+    def __init__(self, emotion_path:str, n_path:str, h_path:str, a_path:str, s_path:str ) -> None:
+        """
+        初期化を実施
+
+        :param emotion_path: 感情推定器のモデルのパス
+        :param n_path: 行動方策のモデルのパス
+        :param h_path: 行動方策のモデルのパス
+        :param a_path: 行動方策のモデルのパス
+        :param s_path: 行動方策のモデルのパス
+        """
+        
+        action_size = 15
+        self.model_e = NN_emotion(3)
+        self.model_e.load_model(emotion_path)
+        self.model_n = NN(action_size)
+        self.model_n.load_model(n_path)
+        self.model_h = NN(action_size)
+        self.model_h.load_model(h_path)
+        self.model_a = NN(action_size)
+        self.model_a.load_model(a_path)
+        self.model_s = NN(action_size)
+        self.model_s.load_model(s_path)
+        self.action_size = action_size
+        self.emotion = 0
+
+    def get_action(self, data: List[Union[int, float]]) -> Action:
+        """
+        現在の状態から最適な行動を求める
+        :param data: 現在の状態
+        :param observation_space: 画面のサイズなどの情報
+        :return: 行動(int)
+        """
+
+        action_value = self.model.predict(data)
+        if(self.emotion == 0):
+            action_value = self.model_h.predcit(data)
+        elif(self.emotion == 1):
+            action_value = self.model_a.predcit(data)
+        elif(self.emotion == 2):
+            action_value = self.model_s.predcit(data)
+        else:
+            action_value = self.model_n.predict(data)
+        # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)
+        # NOTE: +1しているのは列挙型が0ではなく1スタートだから
+        best_action = np.argmax(action_value)
+
+        return best_action
+
+
+    def emotion_calc(self, data: any) -> None:
+        """
+        感情情報を更新する
+
+        0:ニュートラル
+        1:喜び
+        2:怒り
+        3:悲しみ
+
+        :param data: ゲーム情報
+        """
+        emotion_val = self.model_e.predcit(data)
+        self.emotion = np.argmax(emotion_val)
+
+    def get_emotion(self)->list:
+        return self.emotion
+
+
