@@ -30,7 +30,7 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
 
     def __init__(self, **kwargs):
 
-        self.freq_restart_java = 3
+        self.freq_restart_java = 1
         self.java_env_path = os.getcwd()
 
         if "java_env_path" in kwargs.keys():
@@ -86,6 +86,7 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
             error_message = "FightingICE is not installed in your script launched path {}, set path when make() or start script in FightingICE path".format(
                 self.java_env_path)
             raise FileExistsError(error_message)
+            
         self.java_ai_path = os.path.join(self.java_env_path, "data", "ai")
         ai_path = os.path.join(self.java_ai_path, "*")
         if self.system_name == "windows":
@@ -108,8 +109,8 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
 
         if self.system_name == "windows":
             # -Xms1024m -Xmx1024m we need set this in windows
-            self.java_env = subprocess.Popen(["java", "-Xms1024m", "-Xmx1024m", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode", "--err-log",
-                                          "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
+            self.java_env = subprocess.Popen(["java", "-Xms1024m", "-Xmx1024m", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode",
+                                          "--grey-bg", "--inverted-player", "1", "--mute","-r", "10",  "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
         elif self.system_name == "linux":
             self.java_env = subprocess.Popen(["java", "-cp", self.start_up_str, "Main", "--port", str(self.port), "--py4j", "--fastmode",
                                             "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
@@ -118,7 +119,7 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
                                             "--grey-bg", "--inverted-player", "1", "--mute", "--limithp", "400", "400"], stdout=devnull, stderr=devnull)
         # self.java_env = subprocess.Popen(["java", "-cp", "/home/myt/gym-fightingice/gym_fightingice/FightingICE.jar:/home/myt/gym-fightingice/gym_fightingice/lib/lwjgl/*:/home/myt/gym-fightingice/gym_fightingice/lib/natives/linux/*:/home/myt/gym-fightingice/gym_fightingice/lib/*", "Main", "--port", str(self.free_port), "--py4j", "--c1", "ZEN", "--c2", "ZEN","--fastmode", "--grey-bg", "--inverted-player", "1", "--mute"])
         # sleep 3s for java starting, if your machine is slow, make it longer
-        time.sleep(3)
+        time.sleep(10)
 
     def _start_gateway(self, p2=Machete):
         # auto select callback server port and reset it in java env
@@ -134,6 +135,8 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
         self.pipe = server
         self.p1 = GymAI(self.gateway, client, False)
         self.manager.registerAI(self.p1.__class__.__name__, self.p1)
+
+        print("reset: ",self.freq_restart_java)
 
         if isinstance(p2, str):
             # p2 is a java class name
@@ -177,7 +180,7 @@ class FightingiceEnv_Data_NoFrameskip(gym.Env):
             self._start_gateway(p2)
 
         # to provide crash, restart java game in some freq
-        if self.round_num == self.freq_restart_java * 3:  # 3 is for round in one game
+        if self.round_num == self.freq_restart_java * 10:  # 3 is for round in one game
             try:
                 self._close_gateway()
                 self._close_java_game()

@@ -63,7 +63,7 @@ class NN(object):
         :param label: 教師ラベル
         """
 
-        return self.model.fit(data, label, batch_size=64, epochs=64, validation_split=0.1)
+        return self.model.fit(data, label, batch_size=1, epochs=5)
 
     def predict(self, data: any) -> List[float]:
         """
@@ -345,7 +345,6 @@ class DQNAgent(object):
             random_action_value = random.randint(0, self.action_size-1)
             return random_action_value
         action_value = self.model.predict(data)
-
         # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)
         # NOTE: +1しているのは列挙型が0ではなく1スタートだから
         best_action = np.argmax(action_value)

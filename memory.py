@@ -54,7 +54,8 @@ class Memory:
 
         :param batch_size: 取得する情報数
         """
-        idx = np.random.choice(np.arange(len(self.buffer)), size=batch_size, replace=False)
+        # idx = np.random.choice(np.arange(len(self.buffer)), size=batch_size, replace=False)
+        idx = np.random.choice(np.arange(len(self.buffer)), size=batch_size, replace=True)
         return [self.buffer[ii] for ii in idx]
 
     def len(self) -> int:

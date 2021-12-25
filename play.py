@@ -11,7 +11,7 @@ MODEL_NAME = "param.SL04"
 MODEL_PATH = "./model/" + MODEL_NAME
 
 def main():
-    gymEnv = gym.make("FightingiceDataFrameskip-v0", java_env_path=".", port=4242)
+    gymEnv = gym.make("FightingiceDataNoFrameskip-v0", java_env_path=".", port=4242)
     # HACK: aciontから自動で取ってこれるようにしておく
     action_size = 15
     episode = 500
