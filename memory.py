@@ -31,6 +31,22 @@ class Memory:
         """
         self.buffer.append(experience)
 
+    def addLeft(self, experience: any) -> None:
+        """
+        過去の情報を追加する
+
+        :param experience: 情報
+        """
+        self.buffer.appendleft(experience)
+
+    def pop(self):
+        """
+        一番新しい情報をpopする
+
+        """
+        return self.buffer.pop()
+
+
     # TODO: experienceの型を定義する
     def sample(self, batch_size: int) -> List[any]:
         """

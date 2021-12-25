@@ -5,7 +5,7 @@ import os, sys
 from collections import deque
 from memory import Memory
 
-
+from action import Action
 
 class Trainer(object):
     """ 選手の学習や試合の状態を管理する """
@@ -71,25 +71,36 @@ class Trainer(object):
                 # TODO: 毎回get_observation_spaceを実行しないようにしておく
                 action = self.agent.get_action(frame_data, observation_s, i ,episode)
                 # アクションの実行、記録
-                next_frame_data, reward, done, info = self.env.step(action.name)
+                next_frame_data, reward, done, info = self.env.step(Action(action + 1).name)
 
                 #rewardを正規化
                 if(reward != 0):
                     reward = reward / 50
 
-                self.actLog.append(int(action))
+                self.actLog.append(action)
                 # NOTE: 学習出来るように変形しておく
                 next_frame_data = self.env.flatten(next_frame_data)
-                if(reward != 0):
-                    # NOTE: experience replayを実施するため試合を回しながら学習させない
-                    self.memory.add((frame_data, action, reward, next_frame_data))
+                # if(reward != 0):
+                # NOTE: experience replayを実施するため試合を回しながら学習させない
+                self.memory.add((frame_data, action, reward, next_frame_data))
                 frame_data = next_frame_data
 
             print("end round")
             print("total memory:" + str(self.memory.len()))
             
-            # batch = self.memory.sample(batch_size)
-            batch = self.memory.sample((self.memory.len() // 4 ) * 3 )
+            # NOTE: 報酬を逆伝達
+            memory_temp = Memory()
+            reward_gamma = 0.1
+            reward_temp = 0
+            for i in range(self.memory.len()):
+                _temp = self.memory.pop()
+                _reward = _temp[2] + reward_temp * reward_gamma
+                memory_temp.addLeft((_temp[0], _temp[1], _reward, _temp[3]))
+                reward_temp = _reward
+            
+            self.memory = memory_temp
+            batch = self.memory.sample(batch_size)
+            # batch = self.memory.sample((self.memory.len() // 4 ) * 3 )
 
             # NOTE: 学習させるときにenvを変形させる. その時のenvのlenを入れる
             # FIXME: envのlenの管理方法を考える

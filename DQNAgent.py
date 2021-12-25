@@ -403,7 +403,7 @@ class EmotionAgent(object):
         :return: 行動(int)
         """
 
-        action_value = self.model.predict(data)
+        
         if(self.emotion == 0):
             action_value = self.model_h.predcit(data)
         elif(self.emotion == 1):
@@ -423,15 +423,20 @@ class EmotionAgent(object):
         """
         感情情報を更新する
 
-        0:ニュートラル
-        1:喜び
-        2:怒り
-        3:悲しみ
+        
+        0:喜び
+        1:怒り
+        2:悲しみ
+        3:ニュートラル
 
         :param data: ゲーム情報
         """
         emotion_val = self.model_e.predcit(data)
-        self.emotion = np.argmax(emotion_val)
+        val =  np.argmax(emotion_val)
+        if(val > 0.3):
+            self.emotion = np.argmax(emotion_val)
+        else:
+            self.emotion =3
 
     def get_emotion(self)->list:
         return self.emotion
