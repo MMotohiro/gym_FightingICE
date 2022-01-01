@@ -3,6 +3,7 @@ import time
 import matplotlib.pyplot as plt
 import os, sys
 import msvcrt
+from action import Action
 
 class Player(object):
     """ 選手の学習や試合の状態を管理する """
@@ -37,15 +38,16 @@ class Player(object):
             print("*************")
             print("start round " + str(i) +"/"+str(episode))
             print("*************")
-            act_log = [0]*15
+            act_log = [0]*21
             while not done:
                 total_step += 1
                 action = self.agent.get_action(frame_data, observation_s, episode ,episode)
                 # アクションの実行、記録
                 actList = ["1","2","3","4","9","6","7","8","9", "A","B","C","E","S","T"]
                 act_log[action]+=1
-
+                print(actList[action])
                 next_frame_data, reward, done, info = self.env.step(actList[action])
+                # next_frame_data, reward, done, info = self.env.step(Action(action+1).name)
                 if(reward != 0):
                     print("reward:"+ str(reward))
 

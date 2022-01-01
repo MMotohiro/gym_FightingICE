@@ -4,13 +4,15 @@ import matplotlib.pyplot as plt
 import os, sys
 from collections import deque
 from memory import Memory
-from DQNAgent import NN, NNTuner
+from DQNAgent import NN_SL, NNTuner
 import json, csv
 import glob
 
-MODEL_NAME = "param.SL04"
+MODEL_NAME = "param.SAD03"
+BASE_NAME = "param.SL04"
 MODEL_PATH = "./model/" + MODEL_NAME
-TRAIN_PATH = "./learningData/train/"
+BASE_PATH = "./model/" + BASE_NAME
+TRAIN_PATH = "./learningData/sadSL/"
 TEST_PATH = "./learningData/test/"
 
 
@@ -22,8 +24,8 @@ def main():
     test_targets = [0] * 15
     
     #model init
-    model = NN(action_size) 
-
+    model = NN_SL(action_size) 
+    model.load_model(BASE_PATH)
     # read json
     for file in files:
         with open(file, 'r') as f:
@@ -48,11 +50,11 @@ def main():
         act = get_target(data)
         
         if(temp > 8 and act < 9): #前フレームまで技を出していて,今移動フレームなら
-            timer = 10
+            timer = 5
             tempC = temp
 
         if(timer != 0):
-            if(act < 9): #移動ならタイマー減らして行動を技に
+            if(act < 9): #移動ならタイマー減らして移動を技に
                 timer -= 1
                 act = tempC
             else:
@@ -84,6 +86,9 @@ def main():
     #model init
     # model = NNTuner(action_size, inputs,targets) 
     # model.fit()
+    
+    model.save_model(MODEL_PATH)
+
 
     #test
     files = glob.glob(TEST_PATH +"*.json")
@@ -124,17 +129,18 @@ def main():
 
     inputs = inputs[:count]
     targets = targets[:count]
-    
-
-    for i,data in enumerate(testInputs):
-        # print(np.argmax(model.predict(data.reshape(1,len(data)))))
-        test_targets[np.argmax(model.predict(data.reshape(1,len(data))))] += 1
+    predict_x = model.predict(inputs)
+    predict_classes = predict_x.argmax(axis = 1)
+    for i in predict_classes:
+        test_targets[i] += 1
+    # for i,data in enumerate(testInputs):
+    #     # print(np.argmax(model.predict(data.reshape(1,len(data)))))
+    #     test_targets[np.argmax(model.predict(data.reshape(1,len(data))))] += 1
     
     los, acc = model.evaluate(testInputs, testTargets)
     print("loss=", los)
     print("acc =",acc)
     print(test_targets)
-    model.save_model(MODEL_PATH)
 
 
 # スティック1~9とボタンA~Tを、0から14に割り当てる
@@ -156,14 +162,14 @@ def get_target(data):
         if(stick[0]):
             return 6
         elif(stick[1]):
-            return 0
+            return 3
         else:
             return 3
     elif(stick[3]):
         if(stick[0]):
             return 8
         elif(stick[1]):
-            return 2
+            return 5
         else:
             return 5
     elif(stick[0]):

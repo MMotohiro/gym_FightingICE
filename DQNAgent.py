@@ -51,7 +51,7 @@ class NN(object):
         self.model.add(Dense(300, activation='relu'))
         self.model.add(Dense(action_size, activation='softmax'))
         # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
-        self.model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss="categorical_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
         print(self.model.summary())
 
     # TODO: 入力データの型を決める
@@ -64,6 +64,72 @@ class NN(object):
         """
 
         return self.model.fit(data, label, batch_size=1, epochs=5)
+
+    def predict(self, data: any) -> List[float]:
+        """
+        現在の状態から最適な行動を予想する
+
+        :param data: 入力(現在の状態)
+        """
+
+        # NOTE: 出力値はそれぞれの行動を実施すべき確率
+        # HACK: 整形部分はここでやりたくない
+        return self.model.predict(data)
+    
+    def evaluate(self, data: any, label: any):
+        return self.model.evaluate(data,label)
+
+
+    def save_model(self, model_path: str):
+        """
+        モデルを保存する
+
+        :param model_path: 保存先のパス
+        """
+        self.model.save_weights(model_path)
+
+    def load_model(self, model_path: str):
+        """
+        学習済みのモデルを読み込む
+
+        :param model_path: 読み込みたいモデルのパス
+        """
+        self.model.load_weights(model_path)
+
+class NN_SL(object):
+    """ 状態価値関数を予想する """
+    def __init__(self, action_size: int) -> None:
+        """
+        NNの初期化をやる
+
+        :param action_size: 実施出来る行動の数
+        """
+
+        # HACK: モデルの層の構成を簡単に変更出来るようにしておく
+        # HACK: 途中のデータ数を決め打ちしないようにする
+
+        self.model = Sequential()
+
+        #cyr Ai
+        self.model.add(Dense(300, activation='relu', input_dim=143))
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(300, activation='relu'))
+        self.model.add(Dropout(0.25))
+        self.model.add(Dense(action_size, activation='softmax'))
+        # self.model.compile(loss=huberloss, optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss="categorical_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+        print(self.model.summary())
+
+    # TODO: 入力データの型を決める
+    def fit(self, data: any, label: any) -> None:
+        """
+        学習を実施する
+
+        :param data: 教師データ
+        :param label: 教師ラベル
+        """
+
+        return self.model.fit(data, label, batch_size=4, epochs=4)
 
     def predict(self, data: any) -> List[float]:
         """

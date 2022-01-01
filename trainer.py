@@ -71,6 +71,9 @@ class Trainer(object):
                 action = self.agent.get_action(frame_data, observation_s, i ,episode)
                 # アクションの実行、記録
                 next_frame_data, reward, done, info = self.env.step(Action(action + 1).name)
+
+                # 学習用報酬調整
+
                 #rewardを正規化
                 if(reward != 0):
                     reward = reward / 50
@@ -91,7 +94,7 @@ class Trainer(object):
 
             # NOTE: 報酬を逆伝達
             memory_temp = Memory()
-            reward_gamma = 0.96
+            reward_gamma = 0.95
             reward_temp = 0
             for _ in range(self.memory.len()):
                 _temp = self.memory.pop()
@@ -138,7 +141,7 @@ class Trainer(object):
             # 5試合ごとにモデルを保存
             if(i % 5 == 0 and i > 0):
                 print("save model....")
-                self.agent.model.save_model(self.model_path)
+                self.agent.model.save_model(self.model_path+"-"+str(i))
                 print("done saving model!")
 
                 # 現在のepisode数を記録
