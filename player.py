@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os, sys
 import msvcrt
 from action import Action
+from DQNAgent import NN_SL
 
 class Player(object):
     """ 選手の学習や試合の状態を管理する """
@@ -38,12 +39,13 @@ class Player(object):
             print("*************")
             print("start round " + str(i) +"/"+str(episode))
             print("*************")
-            act_log = [0]*21
+            act_log = [0]*15
             while not done:
                 total_step += 1
                 action = self.agent.get_action(frame_data, observation_s, episode ,episode)
+                # action = self.model.predict(frame_data)
                 # アクションの実行、記録
-                actList = ["1","2","3","4","9","6","7","8","9", "A","B","C","E","S","T"]
+                actList = ["1","2","3","4","4","6","7","8","9", "A","B","C","E","S","T"]
                 act_log[action]+=1
                 print(actList[action])
                 next_frame_data, reward, done, info = self.env.step(actList[action])
@@ -62,5 +64,7 @@ class Player(object):
                         exit()
 
             print(act_log)
+            print(act_log[:9])
+            print(act_log[9:])
             print("end round" + str(i+1) + "/" + str(episode))
             print("total step:"  + str(total_step))

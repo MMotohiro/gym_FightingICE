@@ -121,7 +121,7 @@ class NN_SL(object):
         print(self.model.summary())
 
     # TODO: 入力データの型を決める
-    def fit(self, data: any, label: any) -> None:
+    def fit(self, data: any, label: any,epoch = 8) -> None:
         """
         学習を実施する
 
@@ -129,7 +129,7 @@ class NN_SL(object):
         :param label: 教師ラベル
         """
 
-        return self.model.fit(data, label, batch_size=4, epochs=4)
+        return self.model.fit(data, label, batch_size=4, epochs=epoch)
 
     def predict(self, data: any) -> List[float]:
         """
@@ -428,6 +428,37 @@ class DQNAgent(object):
 
         self.model.fit(data, label)
 
+class PAgent(object):
+    """
+    深層学習を用いて行動選択を行うエージェント
+    """
+    # TODO: モデルの保存や読み込み部分を実装する
+
+
+    def __init__(self, action_size: int) -> None:
+        """
+        初期化を実施
+
+        :param action_size: 実施出来るアクションの数
+        :param greedy_value: グリーディー法を実施するかどうかの確率
+        """
+        self.model = NN_SL(action_size)
+        self.action_size = action_size
+
+    def get_action(self, data: List[Union[int, float]], observation_space: spaces, episode: int, maxEpisode: int) -> Action:
+        """
+        現在の状態から最適な行動を求める
+        :param data: 現在の状態
+        :param observation_space: 画面のサイズなどの情報
+        :return: 行動(int)
+        """
+        action_value = self.model.predict(data)
+        # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)
+        # NOTE: +1しているのは列挙型が0ではなく1スタートだから
+        best_action = np.argmax(action_value)
+
+        return best_action
+
 class EmotionAgent(object):
     """
     深層学習を用いて行動選択を行うエージェント
@@ -449,16 +480,16 @@ class EmotionAgent(object):
         action_size = 15
         self.model_e = NN_emotion(3)
         self.model_e.load_model(emotion_path)
-        self.model_n = NN(action_size)
+        self.model_n = NN_SL(action_size)
         self.model_n.load_model(n_path)
-        self.model_h = NN(action_size)
+        self.model_h = NN(21)
         self.model_h.load_model(h_path)
-        self.model_a = NN(action_size)
+        self.model_a = NN_SL(action_size)
         self.model_a.load_model(a_path)
-        self.model_s = NN(action_size)
+        self.model_s = NN_SL(action_size)
         self.model_s.load_model(s_path)
         self.action_size = action_size
-        self.emotion = 0
+        self.emotion = 3
 
     def get_action(self, data: List[Union[int, float]]) -> Action:
         """

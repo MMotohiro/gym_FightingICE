@@ -1,2 +1,2 @@
-model_checkpoint_path: "param.SAD03"
-all_model_checkpoint_paths: "param.SAD03"
+model_checkpoint_path: "param.ANG01"
+all_model_checkpoint_paths: "param.ANG01"

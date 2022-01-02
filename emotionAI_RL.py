@@ -10,8 +10,8 @@ from player import Player
 E_MODEL_NAME = "param.LT04"
 N_MODEL_NAME = "param.SL04"
 H_MODEL_NAME = "param.SL04"
-A_MODEL_NAME = "param.SL04"
-S_MODEL_NAME = "param.SL04"
+A_MODEL_NAME = "param.ANG01"
+S_MODEL_NAME = "param.SAD02"
 E_MODEL_PATH = "./model/" + E_MODEL_NAME
 N_MODEL_PATH = "./model/" + N_MODEL_NAME
 H_MODEL_PATH = "./model/" + H_MODEL_NAME

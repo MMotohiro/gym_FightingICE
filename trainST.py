@@ -13,7 +13,7 @@ import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
 
-MODEL_NAME = "param.LT04"
+MODEL_NAME = "param.LT05"
 MODEL_PATH = "./model/" + MODEL_NAME
 TRAIN_PATH = "./learningData/csv/"
 TEST_PATH = "./learningData/test/"

@@ -8,11 +8,11 @@ from DQNAgent import NN_SL, NNTuner
 import json, csv
 import glob
 
-MODEL_NAME = "param.SAD03"
+MODEL_NAME = "param.ANG01"
 BASE_NAME = "param.SL04"
 MODEL_PATH = "./model/" + MODEL_NAME
 BASE_PATH = "./model/" + BASE_NAME
-TRAIN_PATH = "./learningData/sadSL/"
+TRAIN_PATH = "./learningData/angSL/"
 TEST_PATH = "./learningData/test/"
 
 
@@ -31,7 +31,10 @@ def main():
         with open(file, 'r') as f:
             try:
                 rawData = json.load(f)
-                datas.extend(rawData["rounds"][0])
+                if(rawData["rounds"][0] is []):
+                    datas.extend(rawData["rounds"][1])
+                else:
+                    datas.extend(rawData["rounds"][0])
             except:
                 pass   
 
@@ -50,7 +53,7 @@ def main():
         act = get_target(data)
         
         if(temp > 8 and act < 9): #前フレームまで技を出していて,今移動フレームなら
-            timer = 5
+            timer = 20
             tempC = temp
 
         if(timer != 0):
@@ -74,6 +77,7 @@ def main():
     inputs = inputs[:count]
     targets = targets[:count]
 
+    print(count)
     print(inputs[0:5])
     print(targets[0:5])
     print(test_targets)
@@ -82,7 +86,7 @@ def main():
     print("**************")
 
 
-    model.fit(inputs,targets)
+    model.fit(inputs,targets, epoch = 32)
     #model init
     # model = NNTuner(action_size, inputs,targets) 
     # model.fit()
@@ -127,8 +131,8 @@ def main():
         count += 1
         
 
-    inputs = inputs[:count]
-    targets = targets[:count]
+    inputs = testInputs[:count]
+    targets = testTargets[:count]
     predict_x = model.predict(inputs)
     predict_classes = predict_x.argmax(axis = 1)
     for i in predict_classes:
@@ -137,7 +141,7 @@ def main():
     #     # print(np.argmax(model.predict(data.reshape(1,len(data)))))
     #     test_targets[np.argmax(model.predict(data.reshape(1,len(data))))] += 1
     
-    los, acc = model.evaluate(testInputs, testTargets)
+    los, acc = model.evaluate(inputs, targets)
     print("loss=", los)
     print("acc =",acc)
     print(test_targets)
