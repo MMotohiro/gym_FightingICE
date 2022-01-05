@@ -482,7 +482,8 @@ class EmotionAgent(object):
         self.model_e.load_model(emotion_path)
         self.model_n = NN_SL(action_size)
         self.model_n.load_model(n_path)
-        self.model_h = NN(21)
+        # self.model_h = NN(21)
+        self.model_h = NN_SL(action_size)
         self.model_h.load_model(h_path)
         self.model_a = NN_SL(action_size)
         self.model_a.load_model(a_path)
@@ -490,6 +491,8 @@ class EmotionAgent(object):
         self.model_s.load_model(s_path)
         self.action_size = action_size
         self.emotion = 3
+        self.emotionLog = [1, 0, 0] * 2
+        self.e_inputsLog = [1] * 15
 
     def get_action(self, data: List[Union[int, float]]) -> Action:
         """
@@ -500,18 +503,19 @@ class EmotionAgent(object):
         """
 
         
-        if(self.emotion == 0):
-            action_value = self.model_h.predcit(data)
-        elif(self.emotion == 1):
-            action_value = self.model_a.predcit(data)
-        elif(self.emotion == 2):
-            action_value = self.model_s.predcit(data)
-        else:
+        if(self.emotion == 0): #happy
+            action_value = self.model_h.predict(data)
+        elif(self.emotion == 1): #angry
+            action_value = self.model_a.predict(data)
+        elif(self.emotion == 2): #sad
+            action_value = self.model_s.predict(data)
+        else: #neutral
             action_value = self.model_n.predict(data)
-        # NOTE: 一番評価値が高い行動を選択する(Actionにキャストしておく)
-        # NOTE: +1しているのは列挙型が0ではなく1スタートだから
+        
         best_action = np.argmax(action_value)
-
+        if(self.emotion != 0 or True):
+            actList = ["1","2","3","4","4","6","7","8","9", "A","B","C","E","S","T"]
+            best_action = actList[best_action]
         return best_action
 
 
@@ -527,14 +531,49 @@ class EmotionAgent(object):
 
         :param data: ゲーム情報
         """
-        emotion_val = self.model_e.predcit(data)
-        val =  np.argmax(emotion_val)
-        if(val > 0.3):
+        eInput = self.data2eInputs(data)
+        emotion_val = self.model_e.predict(eInput)
+        print(emotion_val)
+        val =  np.argmax(emotion_val[0])
+        if(emotion_val[0][val] > 0.3):
             self.emotion = np.argmax(emotion_val)
         else:
             self.emotion =3
+        
+        self.emotionLog[3:].extend(emotion_val)
 
-    def get_emotion(self)->list:
+    def get_emotion(self)-> int:
         return self.emotion
 
+    def data2eInputs(self, data):
+        downCount = [0,0]
+        #最初と最後だけでいいの    
+        if(data[27] == "1.0"):
+            downCount[0] += 1
+        elif(data[92]== "1.0"):
+            downCount[1] += 1
 
+        damage = [0,0]
+        damage[0] = self.e_inputsLog[2] - float(data[0])
+        damage[1] = self.e_inputsLog[3] - float(data[65])
+
+        hp = [float(data[0]),float(data[65])]
+        myOppX = [float(data[2]),float(data[67])]
+        time = float(data[-1])
+        down = [0.0, 0.0]
+        if(data[27] == "1.0"):
+            down[0] = 1.0
+        elif(data[92] == "1.0"):
+            down[1] = 1.0
+
+
+        val = []
+        val.extend(damage)
+        val.extend(hp)
+        val.extend(myOppX)
+        val.extend(down)
+        val.extend(self.emotionLog)
+
+        self.e_inputsLog = val
+
+        return np.array(val).reshape([1, 14])

@@ -5,7 +5,7 @@ from gym_fightingice.envs.Machete import Machete
 from observer import Observer
 from rolebaseAgent import RoleBaseAgent
 from DQNAgent import EmotionAgent
-from player import Player
+from emotionPlayer import EmotionPlayer
 
 E_MODEL_NAME = "param.LT04"
 N_MODEL_NAME = "param.SL04"
@@ -29,7 +29,7 @@ def main():
     env = Observer(gymEnv, p2)
     # env = Observer(gymEnv, "KeyBoard")
     agent = EmotionAgent(E_MODEL_PATH, N_MODEL_PATH, H_MODEL_PATH, A_MODEL_PATH, S_MODEL_PATH)
-    player = Player(env, agent)
+    player = EmotionPlayer(env, agent)
 
     print("************\n Sarrt playing\n************")
     player.play(episode)
